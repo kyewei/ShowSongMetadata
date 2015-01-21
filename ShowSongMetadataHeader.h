@@ -3,7 +3,7 @@
 
 
 @interface MusicTableView : UITableView {
-
+    NSMutableDictionary *_cellClassDict;
 }
 @property (assign,nonatomic) id/*<MusicTableViewDelegate>*/ delegate;
 @end
@@ -67,3 +67,8 @@
 - (id) getDetailButton:(MusicCollectionTrackTableViewCell*)cell;
 - (id) getTableView:(UITableViewCell*) cell;
 @end
+
+
+/*@interface MusicActionTableViewCell : MusicTableViewCell
+- (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2;
+@end;*/
