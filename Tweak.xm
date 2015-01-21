@@ -46,13 +46,25 @@
 		NSArray *songCollection = [sectionCollection items];
 		MPConcreteMediaItem *songEntity = [songCollection objectAtIndex: row];
 
-		NSLog(@"%@\n",[songEntity title]);
+		//NSLog(@"%@\n",[songEntity title]);
 
-		//sample info for now
+		// Entire string:
+		NSString *info = [NSString stringWithFormat:@"Title: %@\nArtist: %@\nAlbum Artist: %@\nGenre: %@\nYear: %llu\nRelease Date: %@\nPlay Count: %llu\nSkip Count: %llu\nPlays Since Sync: %llu\nSkips Since Sync: %llu\nLast Played: %@",
+							[songEntity title],
+							[songEntity artist],
+							[songEntity albumArtist],
+							[songEntity genre],
+							[songEntity year],
+							[[songEntity releaseDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil],
+							[songEntity playCount],
+							[songEntity skipCount],
+							[songEntity playCountSinceSync],
+							[songEntity skipCountSinceSync],
+							[[songEntity lastPlayedDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil]];
 
 		UIAlertView *alertView = [[UIAlertView alloc]
 		initWithTitle:@"Song Metadata"
-		message:@"Title: Feeling Good\nArtist: Michael Buble\nYear: 2005\nCopyright: 2005 Reprise Records\n"
+		message:info
 		delegate:self
 		cancelButtonTitle:@"Done"
 		otherButtonTitles:nil];
