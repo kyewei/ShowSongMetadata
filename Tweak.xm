@@ -8,6 +8,24 @@
 -(void) displayPopup: (UIButton*) sender {
 	if ([[sender class] isSubclassOfClass:[UIButton class]]){
 
+		MusicTableView *tableView = [self getTableView:self];
+		MusicAlbumsDetailViewController *controller =  [tableView delegate];  // or [tableView dataSource];
+		NSIndexPath *cellPosition = [tableView indexPathForCell:self];
+		int section = cellPosition.section;
+		int row = cellPosition.row;
+
+		NSLog(@"Clicked section %d, row %d\n", section, row);
+		MusicArtistAlbumsDataSource *dataSource = [controller dataSource];
+
+		NSArray *mediaEntities = [dataSource sectionEntities];
+		NSLog(@"%mediaEntities: length %d\n",[mediaEntities count]);
+
+		MPConcreteMediaItemCollection *sectionCollection = [mediaEntities objectAtIndex: section-1];
+		NSArray *songCollection = [sectionCollection items];
+		MPConcreteMediaItem *songEntity = [songCollection objectAtIndex: row];
+
+		NSLog(@"%@\n",[songEntity title]); 
+
 		//sample info for now
 
 		UIAlertView *alertView = [[UIAlertView alloc]
@@ -18,6 +36,8 @@
 		otherButtonTitles:nil];
 
 		[alertView show];
+	} else {
+		NSLog(@"Sender is not a UITableViewCell??");
 	}
 }
 
@@ -28,6 +48,16 @@
 	UIButton * infoButton  = MSHookIvar<UIButton*>(disclosureView, "_infoButton");
 	[infoButton setUserInteractionEnabled:YES];
 	return infoButton;
+}
+
+%new
+- (id)getTableView:(UITableViewCell*) cell {
+	id view = [cell superview];
+	while (view && [view isKindOfClass:[UITableView class]] == NO) {
+		view = [view superview];
+	}
+	UITableView *tableView = (UITableView *)view;
+	return tableView;
 }
 
 - (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2 {
