@@ -1,0 +1,26 @@
+// This is me exploring the things through
+// cycript -p Music on device
+// and any notes I made before I started coding
+
+
+
+// p is a MusicCollectionTrackTableViewCell
+// @interface MusicCollectionTrackTableViewCell : MusicMediaTableViewCell
+// @interface MusicMediaTableViewCell : MusicTableViewCell
+// @interface MusicTableViewCell : UITableViewCell
+[p setAccessoryType:UITableViewCellAccessoryDetailButton] //2 or 4
+[p cellContentView]
+((p->_accessoryView)->_infoButton) //AccessoryButton
+
+[[p superview] delegate] // MusicTableView
+c = [p superview].superview // MusicTableView
+[c _viewControllerForAncestor] //MusicAlbumsDetailViewController
+d = c->_dataSource //MusicAlbumsDetailViewController
+e = d->_dataSource //MusicArtistAlbumsDataSource
+f = e->_entities; //MPConcreteMediaItem : MPMediaItem : MPMediaEntity
+f.artist
+f.title
+
+//https://developer.apple.com/library/ios/documentation/MediaPlayer/Reference/MPMediaItem_ClassReference/index.html#//apple_ref/doc/constant_group/General_Media_Item_Property_Keys
+
+//https://stackoverflow.com/questions/13208169/ios-getting-explicit-and-clean-tags-from-media-in-objective-c
