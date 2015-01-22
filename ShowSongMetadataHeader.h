@@ -1,3 +1,10 @@
+/*
+ * ShowSongMetadata
+ * ShowSongMetadataHeader.h
+ *
+ * 2015 Kye Wei
+*/
+
 @protocol MusicTableViewDelegate <UITableViewDelegate>
 @end
 
@@ -14,9 +21,12 @@
 @end
 @interface MusicTableViewController : MPUTableViewController
 @property (weak) id /*<MusicTableViewControllerDelegate>*/ delegate;
+@property (weak) id /*<MusicTableViewControllerDelegate>*/ dataSource; //I know this exists so...
 @end
 @interface MusicAlbumsDetailViewController : MusicTableViewController <MusicTableViewDelegate>
-@property (weak) id /*<MusicTableViewControllerDelegate>*/ dataSource; //I know this exists so...
+@end
+
+@interface MusicSongsViewController : MusicTableViewController <MusicTableViewDelegate>
 @end
 
 @interface UITableViewCellDetailDisclosureView : UIControl {
@@ -38,7 +48,11 @@
 }
 - (id)sectionEntities;
 @end
-
+@interface MusicSongsDataSource : MusicQueryDataSource {
+    NSArray *_entities;
+}
+- (id)entities;
+@end
 
 @interface MPMediaEntity : NSObject
 @end
@@ -76,17 +90,25 @@
 @end
 
 @interface MusicTableViewCell : UITableViewCell
+- (id) getDetailButton:(UITableViewCell*)cell;
+- (id) getTableView:(UITableViewCell*) cell;
+- (void) displayPopup: (UIButton*) sender;
+- (id) getMediaItem:(UITableViewCell*)cell; // To get rid of compiler warnings
 @end
 
 @interface MusicMediaTableViewCell : MusicTableViewCell
 @end
 
 @interface MusicCollectionTrackTableViewCell : MusicMediaTableViewCell {
-    UIControl *_accessoryView;
+    //UIControl *_accessoryView;
 }
 @property(retain, nonatomic) UIView *accessoryView;
-- (id) getDetailButton:(MusicCollectionTrackTableViewCell*)cell;
-- (id) getTableView:(UITableViewCell*) cell;
+- (id) getMediaItem:(UITableViewCell*)cell;
+@end
+@interface MusicStandardMediaTableViewCell : MusicMediaTableViewCell
+@end
+@interface MusicSongListTableViewCell : MusicStandardMediaTableViewCell
+- (int) rowsBeforeSection:(int)section inTable:(UITableView*)tableView;
 @end
 
 
