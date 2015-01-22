@@ -166,7 +166,7 @@
 	int row = cellPosition.row;
 
 	int combinedNumber = [self rowsBeforeSection:section inTable:tableView];
-	NSLog(@"%d\n", combinedNumber);
+	//NSLog(@"%d\n", combinedNumber);
 
 	//NSLog(@"Clicked section %d, row %d\n", section, row);
 	MusicSongsDataSource *dataSource = [controller dataSource];
