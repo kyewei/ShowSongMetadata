@@ -5,8 +5,8 @@
  * 2015 Kye Wei
 */
 
-
 #import "ShowSongMetadataHeader.h"
+
 
 %hook MusicTableViewCell
 
@@ -34,11 +34,25 @@
 	if ([[sender class] isSubclassOfClass:[UIButton class]]){
 
 		MPConcreteMediaItem *songEntity = [self getMediaItem:self];
+		if (!songEntity) {
+			NSLog(@"Did not get songEntity.");
+		}
 
 		//NSLog(@"%@\n",[songEntity title]);
 
+		NSURL *assetURL = [songEntity assetURL];
+		AVURLAsset *asset = [AVAsset assetWithURL:assetURL];
+
+		NSArray *audioTracks = [asset tracksWithMediaType:@"soun"]; // AVMediaTypeAudio=@"soun"
+
+		AVAssetTrack *audioTrack = [audioTracks objectAtIndex:0];
+
+		//float bitRate = [audioTrack estimatedDataRate];
+		//int sampleRate = [audioTrack naturalTimeScale];
+
+
 		// Entire string:
-		NSString *info = [NSString stringWithFormat:@"Title: %@\nArtist: %@\nAlbum Artist: %@\nComposer: %@\nGenre: %@\nYear: %llu\nRelease Date: %@\nComments: %@\nPlay Count: %llu\nSkip Count: %llu\nPlays Since Sync: %llu\nSkips Since Sync: %llu\nLast Played: %@",
+		NSString *info = [NSString stringWithFormat:@"Title: %@\nArtist: %@\nAlbum Artist: %@\nComposer: %@\nGenre: %@\nYear: %llu\nRelease Date: %@\nComments: %@\nPlay Count: %llu\nSkip Count: %llu\nPlays Since Sync: %llu\nSkips Since Sync: %llu\nLast Played: %@\nBitrate: %dkbps\nSample Rate: %dHz",
 		[songEntity title],
 		[songEntity artist],
 		[songEntity albumArtist],
@@ -51,7 +65,9 @@
 		[songEntity skipCount],
 		[songEntity playCountSinceSync],
 		[songEntity skipCountSinceSync],
-		[[songEntity lastPlayedDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil]];
+		[[songEntity lastPlayedDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil],
+		(int)[audioTrack estimatedDataRate]/1000, // bitrate
+		[audioTrack naturalTimeScale]]; //sampleRate
 
 		UIAlertView *alertView = [[UIAlertView alloc]
 		initWithTitle:@"Song Metadata"
@@ -73,11 +89,20 @@
 - (id) getMediaItem:(UITableViewCell*)cell {
 	// Table View
 	MusicTableView *tableView = [self getTableView:self];
+	if (!tableView) {
+		NSLog(@"Did not get tableView.");
+	}
 	// Table's View Controller
 	MusicAlbumsDetailViewController *controller =  [tableView delegate];  // or [tableView dataSource];
+	if (!controller) {
+		NSLog(@"Did not get controller.");
+	}
 
 	// Want to get cell's position in Table View, which can then be used as an index
 	NSIndexPath *cellPosition = [tableView indexPathForCell:self];
+	if (!cellPosition) {
+		NSLog(@"Did not get cellPosition.");
+	}
 	int section = cellPosition.section;
 	int row = cellPosition.row;
 
@@ -101,12 +126,21 @@
 
 	//NSLog(@"Clicked section %d, row %d\n", section, row);
 	MusicArtistAlbumsDataSource *dataSource = [controller dataSource];
+	if (!dataSource) {
+		NSLog(@"Did not get dataSource.");
+	}
 
 	NSArray *mediaEntities = [dataSource sectionEntities];
+	if (!mediaEntities) {
+		NSLog(@"Did not get mediaEntities.");
+	}
 	//NSLog(@"%mediaEntities: length %d\n",[mediaEntities count]);
 
 	MPConcreteMediaItemCollection *sectionCollection = [mediaEntities objectAtIndex: section];
 	NSArray *songCollection = [sectionCollection items];
+	if (!songCollection) {
+		NSLog(@"Did not get songCollection.");
+	}
 	MPConcreteMediaItem *songEntity = [songCollection objectAtIndex: row];
 	return songEntity;
 }
@@ -121,6 +155,10 @@
 
 
 	UIButton * infoButton = [self getDetailButton:self];
+
+	if (! infoButton) {
+		NSLog(@"Accessory button not made!");
+	}
 
 	[infoButton addTarget:self
 	action:@selector(displayPopup:)
@@ -157,11 +195,21 @@
 - (id) getMediaItem:(UITableViewCell*)cell {
 	// Table View
 	MusicTableView *tableView = [self getTableView:self];
+	if (!tableView) {
+		NSLog(@"Did not get tableView.");
+	}
+
 	// Table's View Controller
 	MusicSongsViewController *controller =  [tableView delegate];  // or [tableView dataSource];
+	if (!controller) {
+		NSLog(@"Did not get controller.");
+	}
 
 	// Want to get cell's position in Table View, which can then be used as an index
 	NSIndexPath *cellPosition = [tableView indexPathForCell:self];
+	if (!cellPosition) {
+		NSLog(@"Did not get cellPosition.");
+	}
 	int section = cellPosition.section;
 	int row = cellPosition.row;
 
@@ -170,8 +218,14 @@
 
 	//NSLog(@"Clicked section %d, row %d\n", section, row);
 	MusicSongsDataSource *dataSource = [controller dataSource];
+	if (!dataSource) {
+		NSLog(@"Did not get dataSource.");
+	}
 
 	NSArray *songCollection = [dataSource entities];
+	if (!dataSource) {
+		NSLog(@"Did not get songCollection.");
+	}
 	MPConcreteMediaItem *songEntity = [songCollection objectAtIndex: combinedNumber+row+1-1];
 	return songEntity;
 }
@@ -186,6 +240,9 @@
 
 
 	UIButton * infoButton = [self getDetailButton:self];
+	if (! infoButton) {
+		NSLog(@"Accessory button not made!");
+	}
 
 	[infoButton addTarget:self
 	action:@selector(displayPopup:)

@@ -5,6 +5,9 @@
  * 2015 Kye Wei
 */
 
+#import <AVFoundation/AVAsset.h>
+#import <AVFoundation/AVAssetTrack.h>
+
 @protocol MusicTableViewDelegate <UITableViewDelegate>
 @end
 
@@ -78,8 +81,9 @@
 @property (nonatomic,copy) NSDate * lastSkippedDate;
 @property (assign,nonatomic) unsigned long long playCountSinceSync;
 @property (assign,nonatomic) unsigned long long skipCountSinceSync;
-
+@property (nonatomic,readonly) NSURL * assetURL;
 @end
+
 @interface MPConcreteMediaItem : MPMediaItem
 @end
 

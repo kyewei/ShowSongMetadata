@@ -6,7 +6,7 @@ include theos/makefiles/common.mk
 TWEAK_NAME = ShowSongMetadata
 ShowSongMetadata_FILES = Tweak.xm
 
-ShowSongMetadata_FRAMEWORKS = UIKit Foundation MediaPlayer
+ShowSongMetadata_FRAMEWORKS = UIKit Foundation MediaPlayer AVFoundation
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
