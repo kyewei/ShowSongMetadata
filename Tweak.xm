@@ -30,6 +30,30 @@
 }
 
 %new
+- (AudioFileID) getAudioFileID:(ExtAudioFileRef)fileRef {
+	OSStatus status;
+	AudioFileID result = NULL;
+
+	UInt32 size = sizeof(result);
+	status = ExtAudioFileGetProperty(fileRef, kExtAudioFileProperty_AudioFile, &size, &result);
+	assert(status == noErr);
+
+	return result;
+}
+
+%new
+- (UInt32) getBitRate:(AudioFileID)audioFileId {
+	OSStatus status;
+	UInt32 result = 0;
+
+	UInt32 size = sizeof(result);
+	status = AudioFileGetProperty(audioFileId, kAudioFilePropertyBitRate, &size, &result);
+	assert(status == noErr);
+
+	return result;
+}
+
+%new
 -(void) displayPopup: (UIButton*) sender {
 	if ([[sender class] isSubclassOfClass:[UIButton class]]){
 
@@ -51,6 +75,16 @@
 		//int sampleRate = [audioTrack naturalTimeScale];
 
 
+		// Found here:
+		//https://stackoverflow.com/questions/23241957/how-to-get-the-bit-rate-of-existing-mp3-or-aac-in-ios
+		ExtAudioFileRef extAudioFileRef;
+		OSStatus result = noErr;
+		result = ExtAudioFileOpenURL((__bridge CFURLRef) assetURL, &extAudioFileRef);
+
+		AudioFileID audioFileId = [self getAudioFileID:extAudioFileRef];;
+		UInt32 bitRate = [self getBitRate:audioFileId];
+
+
 		// Entire string:
 		NSString *info = [NSString stringWithFormat:@"Title: %@\nArtist: %@\nAlbum Artist: %@\nComposer: %@\nGenre: %@\nYear: %llu\nRelease Date: %@\nComments: %@\nPlay Count: %llu\nSkip Count: %llu\nPlays Since Sync: %llu\nSkips Since Sync: %llu\nLast Played: %@\nBitrate: %dkbps\nSample Rate: %dHz",
 		[songEntity title],
@@ -66,7 +100,8 @@
 		[songEntity playCountSinceSync],
 		[songEntity skipCountSinceSync],
 		[[songEntity lastPlayedDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil],
-		(int)[audioTrack estimatedDataRate]/1000, // bitrate
+		//(int)[audioTrack estimatedDataRate]/1000 ,// bitrate, but only works for AAC files (i.e. .m4a extension)
+		(int)bitRate/1000,
 		[audioTrack naturalTimeScale]]; //sampleRate
 
 		UIAlertView *alertView = [[UIAlertView alloc]

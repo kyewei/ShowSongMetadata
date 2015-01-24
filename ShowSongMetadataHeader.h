@@ -7,6 +7,7 @@
 
 #import <AVFoundation/AVAsset.h>
 #import <AVFoundation/AVAssetTrack.h>
+#import <AudioToolbox/AudioToolbox.h>
 
 @protocol MusicTableViewDelegate <UITableViewDelegate>
 @end
@@ -98,6 +99,8 @@
 - (id) getTableView:(UITableViewCell*) cell;
 - (void) displayPopup: (UIButton*) sender;
 - (id) getMediaItem:(UITableViewCell*)cell; // To get rid of compiler warnings
+- (AudioFileID) getAudioFileID:(ExtAudioFileRef)fileRef;
+- (UInt32) getBitRate:(AudioFileID)audioFileId;
 @end
 
 @interface MusicMediaTableViewCell : MusicTableViewCell
