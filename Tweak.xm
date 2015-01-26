@@ -13,8 +13,16 @@
 %new
 - (id) getDetailButton:(MusicCollectionTrackTableViewCell*)cell {
 	UITableViewCellDetailDisclosureView * disclosureView = MSHookIvar<UITableViewCellDetailDisclosureView*>(self, "_accessoryView");
+	if (!disclosureView) {
+		NSLog(@"Did not get disclosureView.");
+		return nil;
+	}
 	[disclosureView setUserInteractionEnabled:YES];
 	UIButton * infoButton  = MSHookIvar<UIButton*>(disclosureView, "_infoButton");
+	if (!infoButton) {
+		NSLog(@"Did not get infoButton.");
+		return nil;
+	}
 	[infoButton setUserInteractionEnabled:YES];
 	return infoButton;
 }
@@ -60,6 +68,7 @@
 		MPConcreteMediaItem *songEntity = [self getMediaItem:self];
 		if (!songEntity) {
 			NSLog(@"Did not get songEntity.");
+			return;
 		}
 
 		//NSLog(@"%@\n",[songEntity title]);
@@ -125,18 +134,21 @@
 	// Table View
 	MusicTableView *tableView = [self getTableView:self];
 	if (!tableView) {
-		NSLog(@"Did not get tableView.");
+		NSLog(@"Did not get tableView:MusicCollectionTrackTableViewCell.");
+		return nil;
 	}
 	// Table's View Controller
 	MusicAlbumsDetailViewController *controller =  [tableView delegate];  // or [tableView dataSource];
 	if (!controller) {
-		NSLog(@"Did not get controller.");
+		NSLog(@"Did not get controller:MusicCollectionTrackTableViewCell.");
+		return nil;
 	}
 
 	// Want to get cell's position in Table View, which can then be used as an index
 	NSIndexPath *cellPosition = [tableView indexPathForCell:self];
 	if (!cellPosition) {
-		NSLog(@"Did not get cellPosition.");
+		NSLog(@"Did not get cellPosition:MusicCollectionTrackTableViewCell.");
+		return nil;
 	}
 	int section = cellPosition.section;
 	int row = cellPosition.row;
@@ -162,19 +174,29 @@
 	//NSLog(@"Clicked section %d, row %d\n", section, row);
 	MusicArtistAlbumsDataSource *dataSource = [controller dataSource];
 	if (!dataSource) {
-		NSLog(@"Did not get dataSource.");
+		NSLog(@"Did not get dataSource:MusicCollectionTrackTableViewCell.");
+		return nil;
 	}
 
 	NSArray *mediaEntities = [dataSource sectionEntities];
 	if (!mediaEntities) {
-		NSLog(@"Did not get mediaEntities.");
+		NSLog(@"Did not get mediaEntities:MusicCollectionTrackTableViewCell.");
+		return nil;
 	}
 	//NSLog(@"%mediaEntities: length %d\n",[mediaEntities count]);
-
+	if (section >= [mediaEntities count]){
+		NSLog(@"Outofbounds mediaEntities:MusicCollectionTrackTableViewCell:%d %lu",section,(unsigned long)[mediaEntities count]);
+		return nil;
+	}
 	MPConcreteMediaItemCollection *sectionCollection = [mediaEntities objectAtIndex: section];
 	NSArray *songCollection = [sectionCollection items];
 	if (!songCollection) {
 		NSLog(@"Did not get songCollection.");
+		return nil;
+	}
+	if (row >= [songCollection count]){
+		NSLog(@"Outofbounds songCollection:MusicCollectionTrackTableViewCell:%d %lu",row,(unsigned long)[songCollection count]);
+		return nil;
 	}
 	MPConcreteMediaItem *songEntity = [songCollection objectAtIndex: row];
 	return songEntity;
@@ -192,7 +214,7 @@
 	UIButton * infoButton = [self getDetailButton:self];
 
 	if (! infoButton) {
-		NSLog(@"Accessory button not made!");
+		NSLog(@"MusicCollectionTrackTableViewCell accessory button not made!");
 	}
 
 	[infoButton addTarget:self
@@ -231,19 +253,22 @@
 	// Table View
 	MusicTableView *tableView = [self getTableView:self];
 	if (!tableView) {
-		NSLog(@"Did not get tableView.");
+		NSLog(@"Did not get tableView:MusicSongListTableViewCell.");
+		return nil;
 	}
 
 	// Table's View Controller
 	MusicSongsViewController *controller =  [tableView delegate];  // or [tableView dataSource];
 	if (!controller) {
-		NSLog(@"Did not get controller.");
+		NSLog(@"Did not get controller:MusicSongListTableViewCell.");
+		return nil;
 	}
 
 	// Want to get cell's position in Table View, which can then be used as an index
 	NSIndexPath *cellPosition = [tableView indexPathForCell:self];
 	if (!cellPosition) {
-		NSLog(@"Did not get cellPosition.");
+		NSLog(@"Did not get cellPosition:MusicSongListTableViewCell.");
+		return nil;
 	}
 	int section = cellPosition.section;
 	int row = cellPosition.row;
@@ -254,13 +279,20 @@
 	//NSLog(@"Clicked section %d, row %d\n", section, row);
 	MusicSongsDataSource *dataSource = [controller dataSource];
 	if (!dataSource) {
-		NSLog(@"Did not get dataSource.");
+		NSLog(@"Did not get dataSource:MusicSongListTableViewCell.");
+		return nil;
 	}
 
 	NSArray *songCollection = [dataSource entities];
 	if (!dataSource) {
-		NSLog(@"Did not get songCollection.");
+		NSLog(@"Did not get songCollection:MusicSongListTableViewCell.");
+		return nil;
 	}
+	if (combinedNumber+row+1-1 >= [songCollection count]){
+		NSLog(@"Outofbounds songCollection:MusicSongListTableViewCell:%d %lu",combinedNumber+row+1-1,(unsigned long)[songCollection count]);
+		return nil;
+	}
+
 	MPConcreteMediaItem *songEntity = [songCollection objectAtIndex: combinedNumber+row+1-1];
 	return songEntity;
 }
@@ -276,7 +308,7 @@
 
 	UIButton * infoButton = [self getDetailButton:self];
 	if (! infoButton) {
-		NSLog(@"Accessory button not made!");
+		NSLog(@"MusicSongListTableViewCell accessory button not made!");
 	}
 
 	[infoButton addTarget:self

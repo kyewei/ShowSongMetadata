@@ -5,7 +5,7 @@ ShowSongMetadata is an iOS Jailbreak (needs MobileSubstrate) tweak that can disp
 When this tweak is loaded, an info button is added to all relevant UITableViewCells in the Music app's UITableViews
 that launches a detailed popup when pressed.
 
-You can find version ```1.0-1``` hosted on the
+You can find version ```1.0.3-1``` hosted on the
 [BigBoss Repo](http://cydia.saurik.com/package/com.kyewei.showsongmetadata/) in Cydia.
 
 It is built and tested with an iPod Touch on iOS 8.1.2 and should work with iPhones as well on iOS 8. This tweak may or may not work iOS 7, since I don't own such a device and cannot inspect the Music app.
