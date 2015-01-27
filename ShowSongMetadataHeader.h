@@ -19,6 +19,15 @@
 @property (assign,nonatomic) id/*<MusicTableViewDelegate>*/ delegate;
 @end
 
+@interface UISearchResultsTableView : UITableView
+@property (assign,nonatomic) id/*<MusicSearchTableViewDelegate>*/ delegate;
+@end
+
+@interface MusicSearchTableView : UISearchResultsTableView
+@end
+
+
+
 @interface MPUDataSourceViewController : UIViewController
 @end
 @interface MPUTableViewController : MPUDataSourceViewController
@@ -39,23 +48,41 @@
 @property(retain) UIButton *infoButton;
 @end
 
+@interface MusicSearchViewController : UIViewController
+@property (weak) id /*<MusicSearchViewControllerDelegate>*/ delegate;
+@property (weak) id /*<MusicSearchViewControllerDelegate>*/ dataSource; //I know this exists so...
+@end
+
+@interface MPMediaQuery : NSObject
+@property (nonatomic,readonly) NSArray * items;
+@property (nonatomic,readonly) NSArray * collections;
+@property (nonatomic,readonly) NSArray * itemSections;
+@property (nonatomic,readonly) NSArray * collectionSections;
+-(int)groupingType;
+@end
+
 @interface MPUDataSource : NSObject
 @end
 @interface MPUQueryDataSource : MPUDataSource
 @end
 @interface MPUCompletionQueryDataSource : MPUQueryDataSource
 @end
-@interface MusicQueryDataSource : MPUCompletionQueryDataSource
+@interface MusicQueryDataSource : MPUCompletionQueryDataSource {
+    MPMediaQuery* _query;
+}
+- (id)entities;
 @end
 @interface MusicArtistAlbumsDataSource : MusicQueryDataSource {
     NSArray *_sectionEntities;
 }
 - (id)sectionEntities;
 @end
-@interface MusicSongsDataSource : MusicQueryDataSource {
-    NSArray *_entities;
-}
-- (id)entities;
+@interface MusicSongsDataSource : MusicQueryDataSource
+@end
+
+@interface MPUSearchDataSource : MPUQueryDataSource
+@property (nonatomic,readonly) MPMediaQuery * query;
+-(MPMediaQuery *)query;
 @end
 
 @interface MPMediaEntity : NSObject
@@ -116,6 +143,10 @@
 @end
 @interface MusicSongListTableViewCell : MusicStandardMediaTableViewCell
 - (int) rowsBeforeSection:(int)section inTable:(UITableView*)tableView;
+@end
+
+@interface MusicSearchTableViewCell : MusicSongListTableViewCell
+- (id) getMediaItem:(UITableViewCell*)cell;
 @end
 
 

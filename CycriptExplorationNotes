@@ -24,3 +24,25 @@ f.title
 //https://developer.apple.com/library/ios/documentation/MediaPlayer/Reference/MPMediaItem_ClassReference/index.html#//apple_ref/doc/constant_group/General_Media_Item_Property_Keys
 
 //https://stackoverflow.com/questions/13208169/ios-getting-explicit-and-clean-tags-from-media-in-objective-c
+
+
+
+// Searchview
+
+//Everything is MusicSearchTableViewCell:MusicSongListTableViewCell
+// let c be a MusicSearchTableViewCell
+// then c.superview.superview is MusicSearchTableView
+// c.delegate or c.dataSource ->MusicSearchViewController
+// let d = MusicSearchViewController
+// d->_nonEmptySearchDataSources (NSArray of MPUSearchDataSource)
+// d->_searchDataSources (NSArray of MPUSearchDataSource)
+
+// let d = _nonEmptySearchDataSources
+// let e = element in d representing song results
+// tell by looking at d[i].query.groupingType
+// we want value=0, since MPMediaGroupingTitle=0
+// look here for other ones
+// https://developer.apple.com/library/prerelease/ios/documentation/MediaPlayer/Reference/MPMediaQuery_ClassReference/index.html#//apple_ref/c/econst/MPMediaGroupingTitle
+
+// let f = e->_searchResults or e.query.items or e.query.collections[0]->_entities (NSArray of MPConcreteMediaItem)
+// f[row] is MPConcreteMediaItem

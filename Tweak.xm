@@ -206,6 +206,11 @@
 - (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2 {
 	id result = %orig;
 
+	NSString *cellType = [self reuseIdentifier];
+	if (!([cellType isEqualToString:@"MusicAlbumTracksCellConfiguration"])) {
+		return result;
+	}
+
 	[self setAccessoryType:UITableViewCellAccessoryDetailDisclosureButton];
 	// UITableViewCellAccessoryDetailDisclosureButton is 2
 	// UITableViewCellAccessoryDetailButton is 4
@@ -301,6 +306,12 @@
 - (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2 {
 	id result = %orig;
 
+	NSString *cellType = [self reuseIdentifier];
+
+	if (!([cellType isEqualToString:@"MusicSongListCellConfiguration"]
+		|| [cellType isEqualToString:@"MusicPlaylistSongCellConfiguration"])) {
+		return result;
+	}
 	[self setAccessoryType:UITableViewCellAccessoryDetailDisclosureButton];
 	// UITableViewCellAccessoryDetailDisclosureButton is 2
 	// UITableViewCellAccessoryDetailButton is 4
@@ -320,4 +331,93 @@
 	return result;
 }
 
+%end
+
+%hook MusicSearchTableViewCell
+
+- (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2 {
+	id result = %orig;
+
+	NSString *cellType = [self reuseIdentifier];
+
+	if (!([cellType isEqualToString:@"MusicSearchSongCellConfiguration"])) {
+		return result;
+	}
+
+	[self setAccessoryType:UITableViewCellAccessoryDetailDisclosureButton];
+
+	UIButton * infoButton = [self getDetailButton:self];
+	if (! infoButton) {
+		NSLog(@"MusicSearchTableViewCell accessory button not made!");
+	}
+
+	[infoButton addTarget:self
+	action:@selector(displayPopup:)
+	forControlEvents:UIControlEventTouchDown];
+
+	return result;
+}
+
+%new
+- (id) getMediaItem:(UITableViewCell*)cell {
+	// Table View
+	MusicSearchTableView *tableView = [self getTableView:self];
+	if (!tableView) {
+		NSLog(@"Did not get tableView:MusicSearchTableViewCell.");
+		return nil;
+	}
+
+	// Table's View Controller
+	MusicSearchViewController *controller =  [tableView delegate];  // or [tableView dataSource];
+	if (!controller) {
+		NSLog(@"Did not get controller:MusicSearchTableViewCell.");
+		return nil;
+	}
+
+	// Want to get cell's position in Table View, which can then be used as an index
+	NSIndexPath *cellPosition = [tableView indexPathForCell:self];
+	if (!cellPosition) {
+		NSLog(@"Did not get cellPosition:MusicSearchTableViewCell.");
+		return nil;
+	}
+	//int section = cellPosition.section;
+	int row = cellPosition.row;
+
+	//This represents the search results for the sections (Albums, artists, songs, etc)
+	//  that are NON-EMPTY (i.e. something actually found)
+	NSArray *searchResults = MSHookIvar<NSArray*>(controller, "_nonEmptySearchDataSources");
+
+	if (!searchResults) {
+		NSLog(@"Did not get searchResults:MusicSearchTableViewCell.");
+		return nil;
+	}
+
+	MPUSearchDataSource *resultWeWant;
+
+	for (MPUSearchDataSource *element in searchResults) {
+		if ([[element query] groupingType] == 0) {//MPMediaGroupingTitle = 0
+			resultWeWant = element;
+			break;
+		}
+	}
+
+	if (!resultWeWant) {
+		NSLog(@"Did not get resultWeWant:MusicSearchTableViewCell.");
+		return nil;
+	}
+
+	NSArray *songMediaItemList = resultWeWant.query.items;
+
+	if (!songMediaItemList) {
+		NSLog(@"Did not get songMediaItemList:MusicSongListTableViewCell.");
+		return nil;
+	}
+	if (row >= [songMediaItemList count]){
+		NSLog(@"Outofbounds songMediaItemList:MusicSearchTableViewCell:%d %lu",row,(unsigned long)[songMediaItemList count]);
+		return nil;
+	}
+
+	MPConcreteMediaItem *songEntity = [songMediaItemList objectAtIndex: row];
+	return songEntity;
+}
 %end
