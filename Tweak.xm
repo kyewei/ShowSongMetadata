@@ -74,24 +74,31 @@
 		//NSLog(@"%@\n",[songEntity title]);
 
 		NSURL *assetURL = [songEntity assetURL];
-		AVURLAsset *asset = [AVAsset assetWithURL:assetURL];
+		AVAssetTrack *audioTrack;
+		UInt32 bitRate;
+		if (assetURL){
+			AVURLAsset *asset = [AVAsset assetWithURL:assetURL];
 
-		NSArray *audioTracks = [asset tracksWithMediaType:@"soun"]; // AVMediaTypeAudio=@"soun"
+			NSArray *audioTracks = [asset tracksWithMediaType:@"soun"]; // AVMediaTypeAudio=@"soun"
 
-		AVAssetTrack *audioTrack = [audioTracks objectAtIndex:0];
+			audioTrack = [audioTracks objectAtIndex:0];
 
-		//float bitRate = [audioTrack estimatedDataRate];
-		//int sampleRate = [audioTrack naturalTimeScale];
+			//float bitRate = [audioTrack estimatedDataRate];
+			//int sampleRate = [audioTrack naturalTimeScale];
 
 
-		// Found here:
-		//https://stackoverflow.com/questions/23241957/how-to-get-the-bit-rate-of-existing-mp3-or-aac-in-ios
-		ExtAudioFileRef extAudioFileRef;
-		OSStatus result = noErr;
-		result = ExtAudioFileOpenURL((__bridge CFURLRef) assetURL, &extAudioFileRef);
+			// Found here:
+			//https://stackoverflow.com/questions/23241957/how-to-get-the-bit-rate-of-existing-mp3-or-aac-in-ios
+			ExtAudioFileRef extAudioFileRef;
+			OSStatus result = noErr;
+			result = ExtAudioFileOpenURL((__bridge CFURLRef) assetURL, &extAudioFileRef);
 
-		AudioFileID audioFileId = [self getAudioFileID:extAudioFileRef];;
-		UInt32 bitRate = [self getBitRate:audioFileId];
+			AudioFileID audioFileId = [self getAudioFileID:extAudioFileRef];;
+			bitRate = [self getBitRate:audioFileId];
+		} else {
+			audioTrack = nil;
+			bitRate = 0;
+		}
 
 
 		// Entire string:
@@ -206,10 +213,10 @@
 - (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2 {
 	id result = %orig;
 
-	NSString *cellType = [self reuseIdentifier];
+	/*NSString *cellType = [self reuseIdentifier];
 	if (!([cellType isEqualToString:@"MusicAlbumTracksCellConfiguration"])) {
 		return result;
-	}
+	}*/
 
 	[self setAccessoryType:UITableViewCellAccessoryDetailDisclosureButton];
 	// UITableViewCellAccessoryDetailDisclosureButton is 2
@@ -306,12 +313,19 @@
 - (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2 {
 	id result = %orig;
 
-	NSString *cellType = [self reuseIdentifier];
+
+	// Only hook if it is current class, not subclass
+	Class $MusicSongListTableViewCell = objc_getClass("MusicSongListTableViewCell");
+	if (![self isMemberOfClass:[$MusicSongListTableViewCell class]]) {
+		return result;
+	}
+
+	/*NSString *cellType = [self reuseIdentifier];
 
 	if (!([cellType isEqualToString:@"MusicSongListCellConfiguration"]
 		|| [cellType isEqualToString:@"MusicPlaylistSongCellConfiguration"])) {
 		return result;
-	}
+	}*/
 	[self setAccessoryType:UITableViewCellAccessoryDetailDisclosureButton];
 	// UITableViewCellAccessoryDetailDisclosureButton is 2
 	// UITableViewCellAccessoryDetailButton is 4
@@ -392,6 +406,7 @@
 		return nil;
 	}
 
+	// This contains the search query data
 	MPUSearchDataSource *resultWeWant;
 
 	for (MPUSearchDataSource *element in searchResults) {

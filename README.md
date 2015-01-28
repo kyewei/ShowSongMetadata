@@ -23,7 +23,6 @@ I used [cycript](http://iphonedevwiki.net/index.php/Cycript) to first explore th
 
 For searches, elements ```MusicSearchTableViewCell```'s are presented in a ```MusicSearchTableView```. It similarly has an associated ```MusicSearchViewController```. However, this view controller houses a private variable ```_nonEmptySearchDataSources``` which is an ```NSArray``` of ```MPUSearchDataSource```. Since these objects represent search queries, they have a property ```MPMediaQuery``` that contains the query itself, and within these, ```NSArray```'s of ```MPConcreteMediaItem``` which is what I want. The query itself also has a property ```groupingType``` that distinguishes between queries against specific parts of the music library, of which the enum ```MPMediaGroupingTitle=0```, represents song title queries, and will have relevant data. So I similarly carefully fetch the ```MPConcreteMediaItem``` inside these and display the data inside.
 
-Cells also have specific ```reuseIdentifier```'s that show what the cell is used for. They are represented using strings. I only allow a few cell types, ```@"MusicSearchSongCellConfiguration"```, ```@"MusicPlaylistSongCellConfiguration"```, ```@"MusicSongListCellConfiguration"```, ```@"MusicAlbumTracksCellConfiguration"``` to be customized.
 
 TL;DR, looking through private Apple things at runtime is cool. Locating what you want to find, though, is very time-consuming.
 
