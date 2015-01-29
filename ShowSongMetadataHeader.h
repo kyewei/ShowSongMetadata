@@ -157,3 +157,37 @@
 // I know this exists too, I used it
 - (id)dateWithCalendarFormat:(NSString *)formatString timeZone:(NSTimeZone *)timeZone;
 @end
+
+
+
+@interface MPAVItem : NSObject {
+    MPMediaItem* _mediaItem;
+}
+@property (nonatomic,retain,readonly) MPMediaItem * mediaItem;
+- (id) mediaItem;
+@end
+
+@interface MusicNowPlayingViewController : UIViewController {
+    MPAVItem* _item;
+}
+@end
+
+
+@interface MPUNowPlayingTitlesView : UIView
+@property(nonatomic) CGRect frame;
+-(id)initWithFrame:(CGRect)arg1 ;
+@end
+
+@interface MusicNowPlayingPlaybackControlsView : UIView {
+    UIView* _titlesView;
+}
+- (AudioFileID) getAudioFileID:(ExtAudioFileRef)fileRef;
+- (UInt32) getBitRate:(AudioFileID)audioFileId;
+- (id) getMediaItem:(UIView*)view;
+-(void) displayPopup: (UIButton*) sender;
+@property(nonatomic) CGRect frame;
+@property (assign,nonatomic) id delegate;
+-(void)reloadView;
+-(id)initWithFrame:(CGRect)arg1 ;
+-(void) addButtonToView;
+@end

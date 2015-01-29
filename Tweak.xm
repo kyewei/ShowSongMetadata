@@ -168,7 +168,7 @@
 	if (/*checkCell && */[checkCell isKindOfClass:[self class]] == YES
 		|| [NSStringFromClass([self class]) isEqualToString:@"MusicFlipsideAlbumTrackTableViewCell"]) {
 			// For some reason MusicFlipsideAlbumTrackTableViewCell's tableView's cellForRowAtIndexPath produces null..
-			
+
 		// It is not a shuffle cell, don't do anything
 	} else {
 		// Then the shuffle section exists, and we have an off-by-one error;
@@ -438,4 +438,162 @@
 	MPConcreteMediaItem *songEntity = [songMediaItemList objectAtIndex: row];
 	return songEntity;
 }
+%end
+
+
+%hook MusicNowPlayingPlaybackControlsView
+
+%new
+- (id) getMediaItem:(UIView*)view {
+	MusicNowPlayingViewController *viewController = [self delegate];
+
+	MPAVItem *item = MSHookIvar<MPAVItem*>(viewController, "_item");
+	MPConcreteMediaItem *mediaItem = [item mediaItem];
+	return mediaItem;
+}
+
+%new
+- (AudioFileID) getAudioFileID:(ExtAudioFileRef)fileRef {
+	OSStatus status;
+	AudioFileID result = NULL;
+
+	UInt32 size = sizeof(result);
+	status = ExtAudioFileGetProperty(fileRef, kExtAudioFileProperty_AudioFile, &size, &result);
+	assert(status == noErr);
+
+	return result;
+}
+
+%new
+- (UInt32) getBitRate:(AudioFileID)audioFileId {
+	OSStatus status;
+	UInt32 result = 0;
+
+	UInt32 size = sizeof(result);
+	status = AudioFileGetProperty(audioFileId, kAudioFilePropertyBitRate, &size, &result);
+	assert(status == noErr);
+
+	return result;
+}
+
+%new
+-(void) displayPopup: (UIButton*) sender {
+	if ([[sender class] isSubclassOfClass:[UIButton class]]){
+
+		MPConcreteMediaItem *songEntity = [self getMediaItem:self];
+		if (!songEntity) {
+			NSLog(@"Did not get songEntity.");
+			return;
+		}
+
+		//NSLog(@"%@\n",[songEntity title]);
+
+		NSURL *assetURL = [songEntity assetURL];
+		AVAssetTrack *audioTrack;
+		UInt32 bitRate;
+		if (assetURL){
+			AVURLAsset *asset = [AVAsset assetWithURL:assetURL];
+
+			NSArray *audioTracks = [asset tracksWithMediaType:@"soun"]; // AVMediaTypeAudio=@"soun"
+
+			audioTrack = [audioTracks objectAtIndex:0];
+
+			//float bitRate = [audioTrack estimatedDataRate];
+			//int sampleRate = [audioTrack naturalTimeScale];
+
+
+			// Found here:
+			//https://stackoverflow.com/questions/23241957/how-to-get-the-bit-rate-of-existing-mp3-or-aac-in-ios
+			ExtAudioFileRef extAudioFileRef;
+			OSStatus result = noErr;
+			result = ExtAudioFileOpenURL((__bridge CFURLRef) assetURL, &extAudioFileRef);
+
+			AudioFileID audioFileId = [self getAudioFileID:extAudioFileRef];;
+			bitRate = [self getBitRate:audioFileId];
+		} else {
+			audioTrack = nil;
+			bitRate = 0;
+		}
+
+
+		// Entire string:
+		NSString *info = [NSString stringWithFormat:@"Title: %@\nArtist: %@\nAlbum Artist: %@\nComposer: %@\nGenre: %@\nYear: %llu\nRelease Date: %@\nComments: %@\nPlay Count: %llu\nSkip Count: %llu\nPlays Since Sync: %llu\nSkips Since Sync: %llu\nLast Played: %@\nBitrate: %dkbps\nSample Rate: %dHz",
+		[songEntity title],
+		[songEntity artist],
+		[songEntity albumArtist],
+		[songEntity composer],
+		[songEntity genre],
+		[songEntity year],
+		[[songEntity releaseDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil],
+		[songEntity comments],
+		[songEntity playCount],
+		[songEntity skipCount],
+		[songEntity playCountSinceSync],
+		[songEntity skipCountSinceSync],
+		[[songEntity lastPlayedDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil],
+		//(int)[audioTrack estimatedDataRate]/1000 ,// bitrate, but only works for AAC files (i.e. .m4a extension)
+		(int)bitRate/1000,
+		[audioTrack naturalTimeScale]]; //sampleRate
+
+		UIAlertView *alertView = [[UIAlertView alloc]
+		initWithTitle:@"Song Metadata"
+		message:info
+		delegate:self
+		cancelButtonTitle:@"Done"
+		otherButtonTitles:nil];
+
+		[alertView show];
+	} else {
+		NSLog(@"Sender is not a UITableViewCell??");
+	}
+}
+
+
+-(void)reloadView {
+
+	%orig;
+
+	bool hasInfoButton = false;
+	for (UIView *subview in self.subviews)
+	{
+		if (subview.tag == 22096) {
+			hasInfoButton = true;
+		}
+	}
+	if (hasInfoButton){ //Don't add duplicate buttons
+		return;
+	}
+
+
+
+	MPUNowPlayingTitlesView * titlesView = MSHookIvar<MPUNowPlayingTitlesView*>(self, "_titlesView");
+	if (!titlesView) {
+		return;
+	}
+
+	CGRect titleFrame = [titlesView frame];
+
+	UIButton *infoButton = [UIButton buttonWithType:2]; //UIButtonTypeDetailDisclosure=2
+	CGFloat buttonSize = [infoButton frame].size.width;
+
+	CGFloat x = (int)([self frame].size.width * 7 / 8);
+	CGFloat y = (int)(titleFrame.origin.y + ((titleFrame.size.height - buttonSize)/2));
+	CGRect buttonFrame = CGRectMake(x,y,buttonSize,buttonSize);
+
+	infoButton.frame=buttonFrame;
+
+	infoButton.tag = 22096;
+
+	[self addSubview:infoButton];
+
+	[infoButton addTarget:self
+	action:@selector(displayPopup:)
+	forControlEvents:UIControlEventTouchDown];
+}
+
+%new
+-(void) addButtonToView {
+
+}
+
 %end
