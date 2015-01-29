@@ -165,7 +165,10 @@
 	// Detect, and reverse this:
 
 	UITableViewCell *checkCell = [tableView cellForRowAtIndexPath: [NSIndexPath indexPathForRow:0 inSection:0]];
-	if (checkCell && [checkCell isKindOfClass:[self class]] == YES) {
+	if (/*checkCell && */[checkCell isKindOfClass:[self class]] == YES
+		|| [NSStringFromClass([self class]) isEqualToString:@"MusicFlipsideAlbumTrackTableViewCell"]) {
+			// For some reason MusicFlipsideAlbumTrackTableViewCell's tableView's cellForRowAtIndexPath produces null..
+			
 		// It is not a shuffle cell, don't do anything
 	} else {
 		// Then the shuffle section exists, and we have an off-by-one error;
@@ -315,8 +318,8 @@
 
 
 	// Only hook if it is current class, not subclass
-	Class $MusicSongListTableViewCell = objc_getClass("MusicSongListTableViewCell");
-	if (![self isMemberOfClass:[$MusicSongListTableViewCell class]]) {
+	Class $MusicSearchTableViewCell = objc_getClass("MusicSearchTableViewCell");
+	if ([self isKindOfClass:[$MusicSearchTableViewCell class]]) {
 		return result;
 	}
 
