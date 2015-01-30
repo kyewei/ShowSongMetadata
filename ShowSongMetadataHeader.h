@@ -169,7 +169,23 @@
 
 @interface MusicNowPlayingViewController : UIViewController {
     MPAVItem* _item;
+    //UINavigationItem* _navigationItem;
 }
+@property (nonatomic,retain,readonly) UINavigationItem * navigationItem;
+- (BOOL)isLoaded;
+- (void)setLoaded:(BOOL)value;
+-(UINavigationItem *)navigationItem;
+-(void)viewDidLoad;
+-(void)viewDidAppear:(BOOL)animated;
+-(void)didMoveToWindow;
+-(void) addButtonToView;
+
+- (AudioFileID) getAudioFileID:(ExtAudioFileRef)fileRef;
+- (UInt32) getBitRate:(AudioFileID)audioFileId;
+- (id) getMediaItem:(UIViewController*)view;
+-(void) displayPopup: (UIButton*) sender;
+
+
 @end
 
 
@@ -181,13 +197,17 @@
 @interface MusicNowPlayingPlaybackControlsView : UIView {
     UIView* _titlesView;
 }
-- (AudioFileID) getAudioFileID:(ExtAudioFileRef)fileRef;
-- (UInt32) getBitRate:(AudioFileID)audioFileId;
-- (id) getMediaItem:(UIView*)view;
--(void) displayPopup: (UIButton*) sender;
+
+//- (AudioFileID) getAudioFileID:(ExtAudioFileRef)fileRef;
+//- (UInt32) getBitRate:(AudioFileID)audioFileId;
+//- (id) getMediaItem:(UIView*)view;
+//-(void) displayPopup: (UIButton*) sender;
 @property(nonatomic) CGRect frame;
 @property (assign,nonatomic) id delegate;
 -(void)reloadView;
 -(id)initWithFrame:(CGRect)arg1 ;
--(void) addButtonToView;
+@end
+
+@interface UINavigationItem (KWExtensions)
+-(id)navigationBar;
 @end

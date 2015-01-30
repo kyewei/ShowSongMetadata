@@ -440,14 +440,88 @@
 }
 %end
 
-
-%hook MusicNowPlayingPlaybackControlsView
+%hook MusicNowPlayingViewController
 
 %new
-- (id) getMediaItem:(UIView*)view {
-	MusicNowPlayingViewController *viewController = [self delegate];
+- (BOOL)isLoaded {
+	NSNumber * _isLoaded = objc_getAssociatedObject(self, @selector(isLoaded));
+	return _isLoaded ? [_isLoaded boolValue] : NO;
+}
 
-	MPAVItem *item = MSHookIvar<MPAVItem*>(viewController, "_item");
+%new
+- (void)setLoaded:(BOOL)value {
+	objc_setAssociatedObject(self, @selector(isLoaded), @(value), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+-(void)viewDidAppear:(BOOL)animated {
+	%orig;
+	[self setLoaded:YES]; // So future addButtonToView calls are allowed
+
+	UINavigationItem *navigationItem = [self navigationItem];
+	UINavigationBar *bar = [navigationItem navigationBar];
+	UIView *label = navigationItem.titleView;
+
+	[label removeFromSuperview];
+
+	UIView *newView = [[UIView alloc] initWithFrame:CGRectMake(0,0,320,22)];
+	navigationItem.titleView = newView;
+
+	CGRect oldLabelFrame = label.frame;
+	CGRect newLabelFrame = CGRectMake (oldLabelFrame.origin.x /*- oldLabelFrame.size.width/2*/ -(bar.frame.size.width)/2, oldLabelFrame.origin.y-(bar.frame.size.height/2), oldLabelFrame.size.width, oldLabelFrame.size.height);
+	 newLabelFrame = CGRectMake (160, 0, oldLabelFrame.size.width, oldLabelFrame.size.height);
+
+	label.frame = newLabelFrame;
+
+	UIButton *button = [UIButton buttonWithType:2];
+	button.frame = CGRectMake  (button.frame.origin.x /*-(button.frame.size.width)/2*/ -(bar.frame.size.width)/2 + oldLabelFrame.origin.x + oldLabelFrame.size.width + bar.frame.size.width/32, button.frame.origin.y-(button.frame.size.height/2), button.frame.size.width, button.frame.size.height);
+	button.frame = CGRectMake  (0,0, button.frame.size.width, button.frame.size.height);
+
+	[navigationItem.titleView addSubview:label];
+	[navigationItem.titleView addSubview:button];
+
+	button.tag = 22096;
+
+	[button addTarget:self
+	action:@selector(displayPopup:)
+	forControlEvents:UIControlEventTouchDown];
+}
+
+%new
+-(void) addButtonToView {
+	UINavigationItem *navigationItem = [self navigationItem];
+	UINavigationBar *bar = [navigationItem navigationBar];
+
+	UIView *label = navigationItem.titleView;
+
+	if (![self isLoaded] || ![label isKindOfClass:[UILabel class]]) {
+		return;
+	}
+
+	[label removeFromSuperview];
+
+	UIView *newView = [[UIView alloc] initWithFrame:CGRectMake(0,0,160,22)];
+	navigationItem.titleView = newView;
+
+	CGRect oldLabelFrame = label.frame;
+	CGRect newLabelFrame = CGRectMake (oldLabelFrame.origin.x /*- oldLabelFrame.size.width/2*/ -(bar.frame.size.width)/2, oldLabelFrame.origin.y-(bar.frame.size.height/2), oldLabelFrame.size.width, oldLabelFrame.size.height);
+	label.frame = newLabelFrame;
+
+	UIButton *button = [UIButton buttonWithType:2];
+	button.frame = CGRectMake (button.frame.origin.x /*-(button.frame.size.width)/2*/ -(bar.frame.size.width)/2 + oldLabelFrame.origin.x + oldLabelFrame.size.width + bar.frame.size.width/32, button.frame.origin.y-(button.frame.size.height/2), button.frame.size.width, button.frame.size.height);
+
+	[navigationItem.titleView addSubview:label];
+	[navigationItem.titleView addSubview:button];
+
+	button.tag = 22096;
+
+	[button addTarget:self
+	action:@selector(displayPopup:)
+	forControlEvents:UIControlEventTouchDown];
+}
+
+%new
+- (id) getMediaItem:(UIViewController*)view {
+	MPAVItem *item = MSHookIvar<MPAVItem*>(self, "_item");
 	MPConcreteMediaItem *mediaItem = [item mediaItem];
 	return mediaItem;
 }
@@ -549,9 +623,16 @@
 }
 
 
+%end
+
+
+%hook MusicNowPlayingPlaybackControlsView
+
 -(void)reloadView {
 
 	%orig;
+
+	[self.delegate addButtonToView];
 
 	bool hasInfoButton = false;
 	for (UIView *subview in self.subviews)
@@ -586,14 +667,10 @@
 
 	[self addSubview:infoButton];
 
-	[infoButton addTarget:self
+	[infoButton addTarget:self.delegate
 	action:@selector(displayPopup:)
 	forControlEvents:UIControlEventTouchDown];
 }
 
-%new
--(void) addButtonToView {
-
-}
 
 %end
