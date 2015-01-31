@@ -1,7 +1,7 @@
 Package: com.kyewei.showsongmetadata
 Name: ShowSongMetadata
 Depends: mobilesubstrate
-Version: 1.0.5
+Version: 1.1.0
 Architecture: iphoneos-arm
 Description: Show a song's metadata inside the iOS Music App!
 Maintainer: kyewei

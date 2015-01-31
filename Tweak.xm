@@ -457,33 +457,7 @@
 	%orig;
 	[self setLoaded:YES]; // So future addButtonToView calls are allowed
 
-	UINavigationItem *navigationItem = [self navigationItem];
-	UINavigationBar *bar = [navigationItem navigationBar];
-	UIView *label = navigationItem.titleView;
-
-	[label removeFromSuperview];
-
-	UIView *newView = [[UIView alloc] initWithFrame:CGRectMake(0,0,320,22)];
-	navigationItem.titleView = newView;
-
-	CGRect oldLabelFrame = label.frame;
-	CGRect newLabelFrame = CGRectMake (oldLabelFrame.origin.x /*- oldLabelFrame.size.width/2*/ -(bar.frame.size.width)/2, oldLabelFrame.origin.y-(bar.frame.size.height/2), oldLabelFrame.size.width, oldLabelFrame.size.height);
-	 newLabelFrame = CGRectMake (160, 0, oldLabelFrame.size.width, oldLabelFrame.size.height);
-
-	label.frame = newLabelFrame;
-
-	UIButton *button = [UIButton buttonWithType:2];
-	button.frame = CGRectMake  (button.frame.origin.x /*-(button.frame.size.width)/2*/ -(bar.frame.size.width)/2 + oldLabelFrame.origin.x + oldLabelFrame.size.width + bar.frame.size.width/32, button.frame.origin.y-(button.frame.size.height/2), button.frame.size.width, button.frame.size.height);
-	button.frame = CGRectMake  (0,0, button.frame.size.width, button.frame.size.height);
-
-	[navigationItem.titleView addSubview:label];
-	[navigationItem.titleView addSubview:button];
-
-	button.tag = 22096;
-
-	[button addTarget:self
-	action:@selector(displayPopup:)
-	forControlEvents:UIControlEventTouchDown];
+	[self addButtonToView];
 }
 
 %new
@@ -499,15 +473,17 @@
 
 	[label removeFromSuperview];
 
-	UIView *newView = [[UIView alloc] initWithFrame:CGRectMake(0,0,160,22)];
+	UIView *newView = [[UIView alloc] initWithFrame:CGRectMake(0,0,bar.frame.size.width/2,22)];
 	navigationItem.titleView = newView;
 
 	CGRect oldLabelFrame = label.frame;
-	CGRect newLabelFrame = CGRectMake (oldLabelFrame.origin.x /*- oldLabelFrame.size.width/2*/ -(bar.frame.size.width)/2, oldLabelFrame.origin.y-(bar.frame.size.height/2), oldLabelFrame.size.width, oldLabelFrame.size.height);
+	CGRect newLabelFrame;
+	newLabelFrame = CGRectMake (oldLabelFrame.origin.x-bar.frame.size.width/4, 11- oldLabelFrame.size.height/2, oldLabelFrame.size.width, oldLabelFrame.size.height);
+
 	label.frame = newLabelFrame;
 
 	UIButton *button = [UIButton buttonWithType:2];
-	button.frame = CGRectMake (button.frame.origin.x /*-(button.frame.size.width)/2*/ -(bar.frame.size.width)/2 + oldLabelFrame.origin.x + oldLabelFrame.size.width + bar.frame.size.width/32, button.frame.origin.y-(button.frame.size.height/2), button.frame.size.width, button.frame.size.height);
+	button.frame = CGRectMake  (oldLabelFrame.origin.x-bar.frame.size.width/4 + oldLabelFrame.size.width + 16 ,0, button.frame.size.width, button.frame.size.height);
 
 	[navigationItem.titleView addSubview:label];
 	[navigationItem.titleView addSubview:button];
@@ -629,47 +605,9 @@
 %hook MusicNowPlayingPlaybackControlsView
 
 -(void)reloadView {
-
 	%orig;
 
 	[self.delegate addButtonToView];
-
-	bool hasInfoButton = false;
-	for (UIView *subview in self.subviews)
-	{
-		if (subview.tag == 22096) {
-			hasInfoButton = true;
-		}
-	}
-	if (hasInfoButton){ //Don't add duplicate buttons
-		return;
-	}
-
-
-
-	MPUNowPlayingTitlesView * titlesView = MSHookIvar<MPUNowPlayingTitlesView*>(self, "_titlesView");
-	if (!titlesView) {
-		return;
-	}
-
-	CGRect titleFrame = [titlesView frame];
-
-	UIButton *infoButton = [UIButton buttonWithType:2]; //UIButtonTypeDetailDisclosure=2
-	CGFloat buttonSize = [infoButton frame].size.width;
-
-	CGFloat x = (int)([self frame].size.width * 7 / 8);
-	CGFloat y = (int)(titleFrame.origin.y + ((titleFrame.size.height - buttonSize)/2));
-	CGRect buttonFrame = CGRectMake(x,y,buttonSize,buttonSize);
-
-	infoButton.frame=buttonFrame;
-
-	infoButton.tag = 22096;
-
-	[self addSubview:infoButton];
-
-	[infoButton addTarget:self.delegate
-	action:@selector(displayPopup:)
-	forControlEvents:UIControlEventTouchDown];
 }
 
 
