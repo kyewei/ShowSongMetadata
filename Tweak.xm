@@ -460,15 +460,35 @@
 	[self addButtonToView];
 }
 
+-(void)viewDidDisappear:(BOOL)animated {
+	%orig;
+	[self setLoaded:NO];
+}
+
+
 %new
 -(void) addButtonToView {
 	UINavigationItem *navigationItem = [self navigationItem];
 	UINavigationBar *bar = [navigationItem navigationBar];
 
-	UIView *label = navigationItem.titleView;
-
-	if (![self isLoaded] || ![label isKindOfClass:[UILabel class]]) {
+	UIView *potentialLabel = navigationItem.titleView;
+	UILabel *label;
+	if (![self isLoaded] || ![potentialLabel isKindOfClass:[UILabel class]]) {
 		return;
+		if (![potentialLabel isKindOfClass:[UILabel class]]){
+			for (UIView * element in potentialLabel.subviews) {
+				if ([element isKindOfClass:[UILabel class]]) {
+					label = (UILabel*) element;
+				} else if ([element isKindOfClass:[UIButton class]]) {
+					[element removeFromSuperview];
+				}
+			}
+			[potentialLabel removeFromSuperview];
+		} else {
+			label = (UILabel*) potentialLabel;
+		}
+	} else {
+		label = (UILabel*) potentialLabel;
 	}
 
 	[label removeFromSuperview];
@@ -478,12 +498,14 @@
 
 	CGRect oldLabelFrame = label.frame;
 	CGRect newLabelFrame;
-	newLabelFrame = CGRectMake (oldLabelFrame.origin.x-bar.frame.size.width/4, 11- oldLabelFrame.size.height/2, oldLabelFrame.size.width, oldLabelFrame.size.height);
+	CGFloat xStart = bar.frame.size.width/2 - oldLabelFrame.size.width/2 - bar.frame.size.width/4; // centers title: half width of view - 1/2 label width
+
+	newLabelFrame = CGRectMake ((int)(xStart+0.5), 11- oldLabelFrame.size.height/2, oldLabelFrame.size.width, oldLabelFrame.size.height);
 
 	label.frame = newLabelFrame;
 
 	UIButton *button = [UIButton buttonWithType:2];
-	button.frame = CGRectMake  (oldLabelFrame.origin.x-bar.frame.size.width/4 + oldLabelFrame.size.width + 16 ,0, button.frame.size.width, button.frame.size.height);
+	button.frame = CGRectMake  ((int)(xStart+0.5) + oldLabelFrame.size.width + 16,0 , button.frame.size.width, button.frame.size.height);
 
 	[navigationItem.titleView addSubview:label];
 	[navigationItem.titleView addSubview:button];

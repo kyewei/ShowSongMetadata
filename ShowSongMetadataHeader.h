@@ -177,6 +177,7 @@
 -(UINavigationItem *)navigationItem;
 -(void)viewDidLoad;
 -(void)viewDidAppear:(BOOL)animated;
+-(void)viewDidDisappear:(BOOL)animated;
 -(void)didMoveToWindow;
 -(void) addButtonToView;
 
