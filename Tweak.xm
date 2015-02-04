@@ -6,6 +6,169 @@
 */
 
 #import "ShowSongMetadataHeader.h"
+#define settingsPath @"/User/Library/Preferences/com.kyewei.showsongmetadata.plist"
+
+static BOOL tweakEnabled;
+static BOOL songButtonEnabled;
+static BOOL nowPlayingEnabled;
+
+static BOOL showTitle;
+static BOOL showArtist;
+static BOOL showAlbumArtist;
+static BOOL showComposer;
+static BOOL showGenre;
+static BOOL showYear;
+static BOOL showReleaseDate;
+static BOOL showComments;
+static BOOL showPlayCount;
+static BOOL showSkipCount;
+static BOOL showPlaysSinceSync;
+static BOOL showSkipsSinceSync;
+static BOOL showLastPlayed;
+static BOOL showBitrate;
+static BOOL showSampleRate;
+
+
+static void updatePrefs() {
+	NSDictionary *tweakSettings = [NSDictionary dictionaryWithContentsOfFile:settingsPath];
+
+	// Entire tweak enable/disable
+	NSNumber *tweakEnabledNum = tweakSettings[@"tweakEnabled"];
+	tweakEnabled = tweakEnabledNum ? [tweakEnabledNum boolValue] : 1;
+
+	// Song list cell button enable/disable
+	NSNumber *songButtonEnabledNum = tweakSettings[@"songButtonEnabled"];
+	songButtonEnabled = songButtonEnabledNum ? [songButtonEnabledNum boolValue] : 1;
+
+	// Now Playing button enable/disable
+	NSNumber *nowPlayingEnabledNum = tweakSettings[@"nowPlayingEnabled"];
+	nowPlayingEnabled = nowPlayingEnabledNum ? [nowPlayingEnabledNum boolValue] : 1;
+
+
+	//Metadata to show
+	NSNumber *showTitleNum = tweakSettings[@"showTitle"];
+	showTitle = showTitleNum ? [showTitleNum boolValue] : 1;
+	NSNumber *showArtistNum = tweakSettings[@"showArtist"];
+	showArtist = showArtistNum ? [showArtistNum boolValue] : 1;
+	NSNumber *showAlbumArtistNum = tweakSettings[@"showAlbumArtist"];
+	showAlbumArtist = showAlbumArtistNum ? [showAlbumArtistNum boolValue] : 1;
+	NSNumber *showComposerNum = tweakSettings[@"showComposer"];
+	showComposer = showComposerNum ? [showComposerNum boolValue] : 1;
+	NSNumber *showGenreNum = tweakSettings[@"showGenre"];
+	showGenre = showGenreNum ? [showGenreNum boolValue] : 1;
+	NSNumber *showYearNum = tweakSettings[@"showYear"];
+	showYear = showYearNum ? [showYearNum boolValue] : 1;
+	NSNumber *showReleaseDateNum = tweakSettings[@"showReleaseDate"];
+	showReleaseDate = showReleaseDateNum ? [showReleaseDateNum boolValue] : 1;
+	NSNumber *showCommentsNum = tweakSettings[@"showComments"];
+	showComments = showCommentsNum ? [showCommentsNum boolValue] : 1;
+	NSNumber *showPlayCountNum = tweakSettings[@"showPlayCount"];
+	showPlayCount = showPlayCountNum ? [showPlayCountNum boolValue] : 1;
+	NSNumber *showSkipCountNum = tweakSettings[@"showSkipCount"];
+	showSkipCount = showSkipCountNum ? [showSkipCountNum boolValue] : 1;
+	NSNumber *showPlaysSinceSyncNum = tweakSettings[@"showPlaysSinceSync"];
+	showPlaysSinceSync = showPlaysSinceSyncNum ? [showPlaysSinceSyncNum boolValue] : 1;
+	NSNumber *showSkipsSinceSyncNum = tweakSettings[@"showSkipsSinceSync"];
+	showSkipsSinceSync = showSkipsSinceSyncNum ? [showSkipsSinceSyncNum boolValue] : 1;
+	NSNumber *showLastPlayedNum = tweakSettings[@"showLastPlayed"];
+	showLastPlayed = showLastPlayedNum ? [showLastPlayedNum boolValue] : 1;
+	NSNumber *showBitrateNum = tweakSettings[@"showBitrate"];
+	showBitrate = showBitrateNum ? [showBitrateNum boolValue] : 1;
+	NSNumber *showSampleRateNum = tweakSettings[@"showSampleRate"];
+	showSampleRate = showSampleRateNum ? [showSampleRateNum boolValue] : 1;
+}
+
+%ctor {
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+									NULL,
+									(CFNotificationCallback)updatePrefs,
+									CFSTR("com.kyewei.showsongmetadata/settingschanged"),
+									NULL, CFNotificationSuspensionBehaviorCoalesce);
+	updatePrefs();
+}
+
+
+static AudioFileID getAudioFileID(ExtAudioFileRef fileRef) {
+	OSStatus status;
+	AudioFileID result = NULL;
+
+	UInt32 size = sizeof(result);
+	status = ExtAudioFileGetProperty(fileRef, kExtAudioFileProperty_AudioFile, &size, &result);
+	assert(status == noErr);
+
+	return result;
+}
+
+static UInt32 getBitRate(AudioFileID audioFileId) {
+	OSStatus status;
+	UInt32 result = 0;
+
+	UInt32 size = sizeof(result);
+	status = AudioFileGetProperty(audioFileId, kAudioFilePropertyBitRate, &size, &result);
+	assert(status == noErr);
+
+	return result;
+}
+
+void showPopup (MPConcreteMediaItem *songEntity) {
+
+	NSURL *assetURL = [songEntity assetURL];
+	AVAssetTrack *audioTrack;
+	UInt32 bitRate;
+	if (assetURL){
+		AVURLAsset *asset = [AVAsset assetWithURL:assetURL];
+
+		NSArray *audioTracks = [asset tracksWithMediaType:@"soun"]; // AVMediaTypeAudio=@"soun"
+
+		audioTrack = [audioTracks objectAtIndex:0];
+
+		//float bitRate = [audioTrack estimatedDataRate];
+		//int sampleRate = [audioTrack naturalTimeScale];
+
+
+		// Found here:
+		//https://stackoverflow.com/questions/23241957/how-to-get-the-bit-rate-of-existing-mp3-or-aac-in-ios
+		ExtAudioFileRef extAudioFileRef;
+		OSStatus result = noErr;
+		result = ExtAudioFileOpenURL((__bridge CFURLRef) assetURL, &extAudioFileRef);
+
+		AudioFileID audioFileId = getAudioFileID(extAudioFileRef);
+		bitRate = getBitRate(audioFileId);
+	} else {
+		audioTrack = nil;
+		bitRate = 0;
+	}
+
+	// Entire string:
+	NSString *info = [NSString stringWithFormat:@"%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@",
+	showTitle ? [NSString stringWithFormat:@"Title: %@\n", [songEntity title]] : @"",
+	showArtist ? [NSString stringWithFormat:@"Artist: %@\n", [songEntity artist]] : @"",
+	showAlbumArtist ? [NSString stringWithFormat:@"Album Artist: %@\n", [songEntity albumArtist]] : @"",
+	showComposer ? [NSString stringWithFormat:@"Composer: %@\n", [songEntity composer]] : @"",
+	showGenre ? [NSString stringWithFormat:@"Genre: %@\n", [songEntity genre]] : @"",
+	showYear ? [NSString stringWithFormat:@"Year: %llu\n", [songEntity year]] : @"",
+	showReleaseDate ? [NSString stringWithFormat:@"Release Date: %@\n", [[songEntity releaseDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil]] : @"",
+	showComments ? [NSString stringWithFormat:@"Comments: %@\n", [songEntity comments]] : @"",
+	showPlayCount ? [NSString stringWithFormat:@"Play Count: %llu\n", [songEntity playCount]] : @"",
+	showSkipCount ? [NSString stringWithFormat:@"SkipCount: %llu\n", [songEntity skipCount]] : @"",
+	showPlaysSinceSync ? [NSString stringWithFormat:@"Plays Since Sync: %llu\n", [songEntity playCountSinceSync]] : @"",
+	showSkipsSinceSync ? [NSString stringWithFormat:@"Skips Since Sync: %llu\n", [songEntity skipCountSinceSync]] : @"",
+	showLastPlayed ? [NSString stringWithFormat:@"Last Played: %@\n", [[songEntity lastPlayedDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil]] : @"",
+	//(int)[audioTrack estimatedDataRate]/1000 ,// bitrate, but only works for AAC files (i.e. .m4a extension)
+	showBitrate ? [NSString stringWithFormat:@"Bitrate: %dkbps\n", (int)bitRate/1000] : @"",
+	showSampleRate ? [NSString stringWithFormat:@"Sample Rate: %dHz\n", [audioTrack naturalTimeScale]] : @""]; //sampleRate
+
+	UIAlertView *alertView = [[UIAlertView alloc]
+	initWithTitle:@"Song Metadata"
+	message:[info stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]
+	delegate:nil
+	cancelButtonTitle:@"Done"
+	otherButtonTitles:nil];
+
+	[alertView show];
+	[alertView release];
+}
+
 
 
 %hook MusicTableViewCell
@@ -38,30 +201,6 @@
 }
 
 %new
-- (AudioFileID) getAudioFileID:(ExtAudioFileRef)fileRef {
-	OSStatus status;
-	AudioFileID result = NULL;
-
-	UInt32 size = sizeof(result);
-	status = ExtAudioFileGetProperty(fileRef, kExtAudioFileProperty_AudioFile, &size, &result);
-	assert(status == noErr);
-
-	return result;
-}
-
-%new
-- (UInt32) getBitRate:(AudioFileID)audioFileId {
-	OSStatus status;
-	UInt32 result = 0;
-
-	UInt32 size = sizeof(result);
-	status = AudioFileGetProperty(audioFileId, kAudioFilePropertyBitRate, &size, &result);
-	assert(status == noErr);
-
-	return result;
-}
-
-%new
 -(void) displayPopup: (UIButton*) sender {
 	if ([[sender class] isSubclassOfClass:[UIButton class]]){
 
@@ -70,66 +209,9 @@
 			NSLog(@"Did not get songEntity.");
 			return;
 		}
-
-		//NSLog(@"%@\n",[songEntity title]);
-
-		NSURL *assetURL = [songEntity assetURL];
-		AVAssetTrack *audioTrack;
-		UInt32 bitRate;
-		if (assetURL){
-			AVURLAsset *asset = [AVAsset assetWithURL:assetURL];
-
-			NSArray *audioTracks = [asset tracksWithMediaType:@"soun"]; // AVMediaTypeAudio=@"soun"
-
-			audioTrack = [audioTracks objectAtIndex:0];
-
-			//float bitRate = [audioTrack estimatedDataRate];
-			//int sampleRate = [audioTrack naturalTimeScale];
-
-
-			// Found here:
-			//https://stackoverflow.com/questions/23241957/how-to-get-the-bit-rate-of-existing-mp3-or-aac-in-ios
-			ExtAudioFileRef extAudioFileRef;
-			OSStatus result = noErr;
-			result = ExtAudioFileOpenURL((__bridge CFURLRef) assetURL, &extAudioFileRef);
-
-			AudioFileID audioFileId = [self getAudioFileID:extAudioFileRef];;
-			bitRate = [self getBitRate:audioFileId];
-		} else {
-			audioTrack = nil;
-			bitRate = 0;
-		}
-
-
-		// Entire string:
-		NSString *info = [NSString stringWithFormat:@"Title: %@\nArtist: %@\nAlbum Artist: %@\nComposer: %@\nGenre: %@\nYear: %llu\nRelease Date: %@\nComments: %@\nPlay Count: %llu\nSkip Count: %llu\nPlays Since Sync: %llu\nSkips Since Sync: %llu\nLast Played: %@\nBitrate: %dkbps\nSample Rate: %dHz",
-		[songEntity title],
-		[songEntity artist],
-		[songEntity albumArtist],
-		[songEntity composer],
-		[songEntity genre],
-		[songEntity year],
-		[[songEntity releaseDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil],
-		[songEntity comments],
-		[songEntity playCount],
-		[songEntity skipCount],
-		[songEntity playCountSinceSync],
-		[songEntity skipCountSinceSync],
-		[[songEntity lastPlayedDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil],
-		//(int)[audioTrack estimatedDataRate]/1000 ,// bitrate, but only works for AAC files (i.e. .m4a extension)
-		(int)bitRate/1000,
-		[audioTrack naturalTimeScale]]; //sampleRate
-
-		UIAlertView *alertView = [[UIAlertView alloc]
-		initWithTitle:@"Song Metadata"
-		message:info
-		delegate:self
-		cancelButtonTitle:@"Done"
-		otherButtonTitles:nil];
-
-		[alertView show];
+		showPopup(songEntity);
 	} else {
-		NSLog(@"Sender is not a UITableViewCell??");
+		NSLog(@"Sender is not a UIButton??");
 	}
 }
 %end
@@ -215,6 +297,10 @@
 
 - (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2 {
 	id result = %orig;
+
+	if (!(tweakEnabled && songButtonEnabled)) {
+		return result;
+	}
 
 	/*NSString *cellType = [self reuseIdentifier];
 	if (!([cellType isEqualToString:@"MusicAlbumTracksCellConfiguration"])) {
@@ -316,6 +402,9 @@
 - (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2 {
 	id result = %orig;
 
+	if (!(tweakEnabled && songButtonEnabled)) {
+		return result;
+	}
 
 	// Only hook if it is current class, not subclass
 	Class $MusicSearchTableViewCell = objc_getClass("MusicSearchTableViewCell");
@@ -354,6 +443,10 @@
 
 - (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2 {
 	id result = %orig;
+
+	if (!(tweakEnabled && songButtonEnabled)) {
+		return result;
+	}
 
 	NSString *cellType = [self reuseIdentifier];
 
@@ -465,9 +558,13 @@
 	[self setLoaded:NO];
 }
 
-
 %new
 -(void) addButtonToView {
+
+	if (!(tweakEnabled && nowPlayingEnabled)) {
+		return;
+	}
+
 	UINavigationItem *navigationItem = [self navigationItem];
 	UINavigationBar *bar = [navigationItem navigationBar];
 
@@ -504,7 +601,7 @@
 
 	label.frame = newLabelFrame;
 
-	UIButton *button = [UIButton buttonWithType:2];
+	UIButton *button = [UIButton buttonWithType:2]; //UIButtonTypeDetailDisclosure=2
 	button.frame = CGRectMake  ((int)(xStart+0.5) + oldLabelFrame.size.width + 16,0 , button.frame.size.width, button.frame.size.height);
 
 	[navigationItem.titleView addSubview:label];
@@ -525,30 +622,6 @@
 }
 
 %new
-- (AudioFileID) getAudioFileID:(ExtAudioFileRef)fileRef {
-	OSStatus status;
-	AudioFileID result = NULL;
-
-	UInt32 size = sizeof(result);
-	status = ExtAudioFileGetProperty(fileRef, kExtAudioFileProperty_AudioFile, &size, &result);
-	assert(status == noErr);
-
-	return result;
-}
-
-%new
-- (UInt32) getBitRate:(AudioFileID)audioFileId {
-	OSStatus status;
-	UInt32 result = 0;
-
-	UInt32 size = sizeof(result);
-	status = AudioFileGetProperty(audioFileId, kAudioFilePropertyBitRate, &size, &result);
-	assert(status == noErr);
-
-	return result;
-}
-
-%new
 -(void) displayPopup: (UIButton*) sender {
 	if ([[sender class] isSubclassOfClass:[UIButton class]]){
 
@@ -557,80 +630,18 @@
 			NSLog(@"Did not get songEntity.");
 			return;
 		}
-
-		//NSLog(@"%@\n",[songEntity title]);
-
-		NSURL *assetURL = [songEntity assetURL];
-		AVAssetTrack *audioTrack;
-		UInt32 bitRate;
-		if (assetURL){
-			AVURLAsset *asset = [AVAsset assetWithURL:assetURL];
-
-			NSArray *audioTracks = [asset tracksWithMediaType:@"soun"]; // AVMediaTypeAudio=@"soun"
-
-			audioTrack = [audioTracks objectAtIndex:0];
-
-			//float bitRate = [audioTrack estimatedDataRate];
-			//int sampleRate = [audioTrack naturalTimeScale];
-
-
-			// Found here:
-			//https://stackoverflow.com/questions/23241957/how-to-get-the-bit-rate-of-existing-mp3-or-aac-in-ios
-			ExtAudioFileRef extAudioFileRef;
-			OSStatus result = noErr;
-			result = ExtAudioFileOpenURL((__bridge CFURLRef) assetURL, &extAudioFileRef);
-
-			AudioFileID audioFileId = [self getAudioFileID:extAudioFileRef];;
-			bitRate = [self getBitRate:audioFileId];
-		} else {
-			audioTrack = nil;
-			bitRate = 0;
-		}
-
-
-		// Entire string:
-		NSString *info = [NSString stringWithFormat:@"Title: %@\nArtist: %@\nAlbum Artist: %@\nComposer: %@\nGenre: %@\nYear: %llu\nRelease Date: %@\nComments: %@\nPlay Count: %llu\nSkip Count: %llu\nPlays Since Sync: %llu\nSkips Since Sync: %llu\nLast Played: %@\nBitrate: %dkbps\nSample Rate: %dHz",
-		[songEntity title],
-		[songEntity artist],
-		[songEntity albumArtist],
-		[songEntity composer],
-		[songEntity genre],
-		[songEntity year],
-		[[songEntity releaseDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil],
-		[songEntity comments],
-		[songEntity playCount],
-		[songEntity skipCount],
-		[songEntity playCountSinceSync],
-		[songEntity skipCountSinceSync],
-		[[songEntity lastPlayedDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil],
-		//(int)[audioTrack estimatedDataRate]/1000 ,// bitrate, but only works for AAC files (i.e. .m4a extension)
-		(int)bitRate/1000,
-		[audioTrack naturalTimeScale]]; //sampleRate
-
-		UIAlertView *alertView = [[UIAlertView alloc]
-		initWithTitle:@"Song Metadata"
-		message:info
-		delegate:self
-		cancelButtonTitle:@"Done"
-		otherButtonTitles:nil];
-
-		[alertView show];
+		showPopup(songEntity);
 	} else {
-		NSLog(@"Sender is not a UITableViewCell??");
+		NSLog(@"Sender is not a UIButton??");
 	}
 }
-
-
 %end
 
 
 %hook MusicNowPlayingPlaybackControlsView
-
 -(void)reloadView {
 	%orig;
 
 	[self.delegate addButtonToView];
 }
-
-
 %end

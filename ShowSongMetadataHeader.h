@@ -126,8 +126,6 @@
 - (id) getTableView:(UITableViewCell*) cell;
 - (void) displayPopup: (UIButton*) sender;
 - (id) getMediaItem:(UITableViewCell*)cell; // To get rid of compiler warnings
-- (AudioFileID) getAudioFileID:(ExtAudioFileRef)fileRef;
-- (UInt32) getBitRate:(AudioFileID)audioFileId;
 @end
 
 @interface MusicMediaTableViewCell : MusicTableViewCell
@@ -180,12 +178,8 @@
 -(void)viewDidDisappear:(BOOL)animated;
 -(void)didMoveToWindow;
 -(void) addButtonToView;
-
-- (AudioFileID) getAudioFileID:(ExtAudioFileRef)fileRef;
-- (UInt32) getBitRate:(AudioFileID)audioFileId;
 - (id) getMediaItem:(UIViewController*)view;
 -(void) displayPopup: (UIButton*) sender;
-
 
 @end
 

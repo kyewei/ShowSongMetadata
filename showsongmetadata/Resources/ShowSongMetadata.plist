@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>tweakEnabled</string>
+			<key>label</key>
+			<string>Enabled</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+
+
+
+		<!--Where the button appears-->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Show button in:</string>
+			<key>footerText</key>
+			<string>Changes will take effect when views are reloaded.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>songButtonEnabled</string>
+			<key>label</key>
+			<string>Song Selection</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>nowPlayingEnabled</string>
+			<key>label</key>
+			<string>Now Playing</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+
+
+
+		<!--Selecting specific metadata to show-->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Metadata to show:</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showTitle</string>
+			<key>label</key>
+			<string>Title</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showArtist</string>
+			<key>label</key>
+			<string>Artist</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showAlbumArtist</string>
+			<key>label</key>
+			<string>Album Artist</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showComposer</string>
+			<key>label</key>
+			<string>Composer</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showGenre</string>
+			<key>label</key>
+			<string>Genre</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showYear</string>
+			<key>label</key>
+			<string>Year</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showReleaseDate</string>
+			<key>label</key>
+			<string>Release Date</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showComments</string>
+			<key>label</key>
+			<string>Comments</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showPlayCount</string>
+			<key>label</key>
+			<string>Play Count</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showSkipCount</string>
+			<key>label</key>
+			<string>Skip Count</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showPlaysSinceSync</string>
+			<key>label</key>
+			<string>Plays Since Sync</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showSkipsSinceSync</string>
+			<key>label</key>
+			<string>Skips Since Sync</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showLastPlayed</string>
+			<key>label</key>
+			<string>Last Played</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showBitrate</string>
+			<key>label</key>
+			<string>Bitrate</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>showSampleRate</string>
+			<key>label</key>
+			<string>Sample Rate</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>ShowSongMetadata</string>
+</dict>
+</plist>

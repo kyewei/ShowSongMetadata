@@ -1,0 +1,10 @@
+{
+    entry = {
+	bundle = ShowSongMetadata;
+	cell = PSLinkCell;
+	detail = ShowSongMetadataListController;
+	icon = ShowSongMetadata.png;
+	isController = 1;
+	label = ShowSongMetadata;
+    };
+}
