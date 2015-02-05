@@ -8,29 +8,33 @@
 #import "ShowSongMetadataHeader.h"
 #define settingsPath @"/User/Library/Preferences/com.kyewei.showsongmetadata.plist"
 
-static BOOL tweakEnabled;
-static BOOL songButtonEnabled;
-static BOOL nowPlayingEnabled;
+static BOOL tweakEnabled = YES;
+static BOOL songButtonEnabled = YES;
+static BOOL nowPlayingEnabled = YES;
 
-static BOOL showTitle;
-static BOOL showArtist;
-static BOOL showAlbumArtist;
-static BOOL showComposer;
-static BOOL showGenre;
-static BOOL showYear;
-static BOOL showReleaseDate;
-static BOOL showComments;
-static BOOL showPlayCount;
-static BOOL showSkipCount;
-static BOOL showPlaysSinceSync;
-static BOOL showSkipsSinceSync;
-static BOOL showLastPlayed;
-static BOOL showBitrate;
-static BOOL showSampleRate;
+static BOOL showTitle = YES;
+static BOOL showArtist = YES;
+static BOOL showAlbumArtist = YES;
+static BOOL showComposer = YES;
+static BOOL showGenre = YES;
+static BOOL showYear = YES;
+static BOOL showReleaseDate = YES;
+static BOOL showComments = YES;
+static BOOL showPlayCount = YES;
+static BOOL showSkipCount = YES;
+static BOOL showPlaysSinceSync = YES;
+static BOOL showSkipsSinceSync = YES;
+static BOOL showLastPlayed = YES;
+static BOOL showBitrate = YES;
+static BOOL showSampleRate = YES;
 
 
 static void updatePrefs() {
 	NSDictionary *tweakSettings = [NSDictionary dictionaryWithContentsOfFile:settingsPath];
+
+	if (!tweakSettings){
+		return;
+	}
 
 	// Entire tweak enable/disable
 	NSNumber *tweakEnabledNum = tweakSettings[@"tweakEnabled"];

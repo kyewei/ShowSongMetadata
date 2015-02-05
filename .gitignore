@@ -1,3 +1,6 @@
+#Theos files
+.theos/*
+
 # OS X temporary files
 .DS_Store
 .Spotlight-V100
