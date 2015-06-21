@@ -4,6 +4,13 @@
 <dict>
 	<key>items</key>
 	<array>
+		<!--Master ON/OFF-->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>All changes will take effect when views are reloaded.</string>
+		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
@@ -20,15 +27,12 @@
 		</dict>
 
 
-
 		<!--Where the button appears-->
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
 			<string>Show button in:</string>
-			<key>footerText</key>
-			<string>Changes will take effect when views are reloaded.</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -59,7 +63,27 @@
 			<string>com.kyewei.showsongmetadata/settingschanged</string>
 		</dict>
 
-
+		<!--Popup Options-->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Popup Options:</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kyewei.showsongmetadata</string>
+			<key>key</key>
+			<string>hideNull</string>
+			<key>label</key>
+			<string>Only Show Fields With Data</string>
+			<key>PostNotification</key>
+			<string>com.kyewei.showsongmetadata/settingschanged</string>
+		</dict>
 
 		<!--Selecting specific metadata to show-->
 		<dict>

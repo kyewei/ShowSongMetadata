@@ -12,6 +12,8 @@ static BOOL tweakEnabled = YES;
 static BOOL songButtonEnabled = YES;
 static BOOL nowPlayingEnabled = YES;
 
+static BOOL hideNull = YES;
+
 static BOOL showTitle = YES;
 static BOOL showArtist = YES;
 static BOOL showAlbumArtist = YES;
@@ -47,6 +49,10 @@ static void updatePrefs() {
 	// Now Playing button enable/disable
 	NSNumber *nowPlayingEnabledNum = tweakSettings[@"nowPlayingEnabled"];
 	nowPlayingEnabled = nowPlayingEnabledNum ? [nowPlayingEnabledNum boolValue] : 1;
+
+	// Hide "nil"
+	NSNumber *hideNullNum = tweakSettings[@"hideNull"];
+	hideNull = hideNullNum ? [hideNullNum boolValue] : 1;
 
 
 	//Metadata to show
@@ -124,6 +130,11 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 
 		NSArray *audioTracks = [asset tracksWithMediaType:@"soun"]; // AVMediaTypeAudio=@"soun"
 
+		if (!audioTracks || 1 > [audioTracks count]){
+			NSLog(@"showPopup audioTracks:MPConcreteMediaItem:%d %lu",0,(unsigned long)[audioTracks count]);
+			return;
+		}
+
 		audioTrack = [audioTracks objectAtIndex:0];
 
 		//float bitRate = [audioTrack estimatedDataRate];
@@ -145,19 +156,19 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 
 	// Entire string:
 	NSString *info = [NSString stringWithFormat:@"%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@",
-	showTitle ? [NSString stringWithFormat:@"Title: %@\n", [songEntity title]] : @"",
-	showArtist ? [NSString stringWithFormat:@"Artist: %@\n", [songEntity artist]] : @"",
-	showAlbumArtist ? [NSString stringWithFormat:@"Album Artist: %@\n", [songEntity albumArtist]] : @"",
-	showComposer ? [NSString stringWithFormat:@"Composer: %@\n", [songEntity composer]] : @"",
-	showGenre ? [NSString stringWithFormat:@"Genre: %@\n", [songEntity genre]] : @"",
-	showYear ? [NSString stringWithFormat:@"Year: %llu\n", [songEntity year]] : @"",
-	showReleaseDate ? [NSString stringWithFormat:@"Release Date: %@\n", [[songEntity releaseDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil]] : @"",
-	showComments ? [NSString stringWithFormat:@"Comments: %@\n", [songEntity comments]] : @"",
-	showPlayCount ? [NSString stringWithFormat:@"Play Count: %llu\n", [songEntity playCount]] : @"",
-	showSkipCount ? [NSString stringWithFormat:@"SkipCount: %llu\n", [songEntity skipCount]] : @"",
-	showPlaysSinceSync ? [NSString stringWithFormat:@"Plays Since Sync: %llu\n", [songEntity playCountSinceSync]] : @"",
-	showSkipsSinceSync ? [NSString stringWithFormat:@"Skips Since Sync: %llu\n", [songEntity skipCountSinceSync]] : @"",
-	showLastPlayed ? [NSString stringWithFormat:@"Last Played: %@\n", [[songEntity lastPlayedDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil]] : @"",
+	showTitle && (!hideNull || [songEntity title]) ? [NSString stringWithFormat:@"Title: %@\n", [songEntity title]] : @"",
+	showArtist && (!hideNull || [songEntity artist]) ? [NSString stringWithFormat:@"Artist: %@\n", [songEntity artist]] : @"",
+	showAlbumArtist && (!hideNull || [songEntity albumArtist]) ? [NSString stringWithFormat:@"Album Artist: %@\n", [songEntity albumArtist]] : @"",
+	showComposer && (!hideNull || [songEntity composer]) ? [NSString stringWithFormat:@"Composer: %@\n", [songEntity composer]] : @"",
+	showGenre && (!hideNull || [songEntity genre]) ? [NSString stringWithFormat:@"Genre: %@\n", [songEntity genre]] : @"",
+	showYear && (!hideNull || [songEntity year]) ? [NSString stringWithFormat:@"Year: %llu\n", [songEntity year]] : @"",
+	showReleaseDate && (!hideNull || [songEntity releaseDate]) ? [NSString stringWithFormat:@"Release Date: %@\n", [[songEntity releaseDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil]] : @"",
+	showComments && (!hideNull || [songEntity comments]) ? [NSString stringWithFormat:@"Comments: %@\n", [songEntity comments]] : @"",
+	showPlayCount && (!hideNull || [songEntity playCount]) ? [NSString stringWithFormat:@"Play Count: %llu\n", [songEntity playCount]] : @"",
+	showSkipCount && (!hideNull || [songEntity skipCount]) ? [NSString stringWithFormat:@"Skip Count: %llu\n", [songEntity skipCount]] : @"",
+	showPlaysSinceSync && (!hideNull || [songEntity playCountSinceSync]) ? [NSString stringWithFormat:@"Plays Since Sync: %llu\n", [songEntity playCountSinceSync]] : @"",
+	showSkipsSinceSync && (!hideNull || [songEntity skipCountSinceSync]) ? [NSString stringWithFormat:@"Skips Since Sync: %llu\n", [songEntity skipCountSinceSync]] : @"",
+	showLastPlayed && (!hideNull || [songEntity lastPlayedDate]) ? [NSString stringWithFormat:@"Last Played: %@\n", [[songEntity lastPlayedDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil]] : @"",
 	//(int)[audioTrack estimatedDataRate]/1000 ,// bitrate, but only works for AAC files (i.e. .m4a extension)
 	showBitrate ? [NSString stringWithFormat:@"Bitrate: %dkbps\n", (int)bitRate/1000] : @"",
 	showSampleRate ? [NSString stringWithFormat:@"Sample Rate: %dHz\n", [audioTrack naturalTimeScale]] : @""]; //sampleRate
@@ -173,7 +184,30 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 	[alertView release];
 }
 
+/*%hook UITapGestureRecognizer
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
+{
+	BOOL a = touch.view.tag==22096;
+	if (a) {
+		return NO;
+	}
+	//return %orig;
+	return NO;
+}
+%end
 
+%hook UIGestureRecognizer
+-(id)initWithTarget:(id)arg1 action:(SEL)arg2 {
+	id result = %orig;
+
+	[self setCancelsTouchesInView:NO];
+	return result;
+}
+- (BOOL)cancelsTouchesInView
+{
+	return NO;
+}
+%end*/
 
 %hook MusicTableViewCell
 
@@ -251,6 +285,11 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 	// Detect, and reverse this:
 
 	UITableViewCell *checkCell = [tableView cellForRowAtIndexPath: [NSIndexPath indexPathForRow:0 inSection:0]];
+	/*NSString *type = MSHookIvar<NSString*>(checkCell, "_reuseIdentifier");
+	if ([type isEqualToString:@"MusicShuffleActionCellConfiguration"]) {
+		section--;
+	}*/
+
 	if (/*checkCell && */[checkCell isKindOfClass:[self class]] == YES
 		|| [NSStringFromClass([self class]) isEqualToString:@"MusicFlipsideAlbumTrackTableViewCell"]) {
 			// For some reason MusicFlipsideAlbumTrackTableViewCell's tableView's cellForRowAtIndexPath produces null..
@@ -261,6 +300,8 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 		//Fix:
 		section--;
 	}
+	if (section<0)
+		section=0;
 
 	/*NSDictionary *appliedProperties = MSHookIvar<NSDictionary*>(tableView, "_cellClassDict");
 	id lookup = [appliedProperties objectForKey:@"MusicShuffleActionCellConfiguration"];
@@ -321,6 +362,7 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 	if (! infoButton) {
 		NSLog(@"MusicCollectionTrackTableViewCell accessory button not made!");
 	}
+	infoButton.tag = 22096;
 
 	[infoButton addTarget:self
 	action:@selector(displayPopup:)
@@ -431,6 +473,7 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 	if (! infoButton) {
 		NSLog(@"MusicSongListTableViewCell accessory button not made!");
 	}
+	infoButton.tag = 22096;
 
 	[infoButton addTarget:self
 	action:@selector(displayPopup:)
@@ -464,6 +507,7 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 	if (! infoButton) {
 		NSLog(@"MusicSearchTableViewCell accessory button not made!");
 	}
+	infoButton.tag = 22096;
 
 	[infoButton addTarget:self
 	action:@selector(displayPopup:)
@@ -550,10 +594,21 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 	objc_setAssociatedObject(self, @selector(isLoaded), @(value), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
+%new
+- (float)titleWidthGap {
+	NSNumber * _isLoaded = objc_getAssociatedObject(self, @selector(titleWidthGap));
+	return [_isLoaded floatValue];
+}
+
+%new
+- (void)setTitleWidthGap:(float)value {
+	objc_setAssociatedObject(self, @selector(titleWidthGap), @(value), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
 -(void)viewDidAppear:(BOOL)animated {
 	%orig;
 	[self setLoaded:YES]; // So future addButtonToView calls are allowed
-
+	//NSLog(@"DISAPPLEAR");
 	[self addButtonToView];
 }
 
@@ -561,6 +616,9 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 	%orig;
 	[self setLoaded:NO];
 }
+
+
+//float titleWidthGap=0;
 
 %new
 -(void) addButtonToView {
@@ -574,9 +632,11 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 
 	UIView *potentialLabel = navigationItem.titleView;
 	UILabel *label;
+
 	if (![self isLoaded] || ![potentialLabel isKindOfClass:[UILabel class]]) {
 		return;
-		if (![potentialLabel isKindOfClass:[UILabel class]]){
+	} else {
+		if (![potentialLabel isKindOfClass:[UILabel class]]){ // Is an UIView
 			for (UIView * element in potentialLabel.subviews) {
 				if ([element isKindOfClass:[UILabel class]]) {
 					label = (UILabel*) element;
@@ -585,11 +645,9 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 				}
 			}
 			[potentialLabel removeFromSuperview];
-		} else {
+		} else { // original label
 			label = (UILabel*) potentialLabel;
 		}
-	} else {
-		label = (UILabel*) potentialLabel;
 	}
 
 	[label removeFromSuperview];
@@ -599,23 +657,24 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 
 	CGRect oldLabelFrame = label.frame;
 	CGRect newLabelFrame;
-	CGFloat xStart = bar.frame.size.width/2 - oldLabelFrame.size.width/2 - bar.frame.size.width/4; // centers title: half width of view - 1/2 label width
 
-	newLabelFrame = CGRectMake ((int)(xStart+0.5), 11- oldLabelFrame.size.height/2, oldLabelFrame.size.width, oldLabelFrame.size.height);
+	if (oldLabelFrame.origin.x !=0)
+		[self setTitleWidthGap: oldLabelFrame.origin.x];
 
+	CGFloat xStart = [self titleWidthGap] - bar.frame.size.width/4; // centers title: half width of halved width view - 1/2 label width
+	newLabelFrame = CGRectMake (xStart, 11- oldLabelFrame.size.height/2, oldLabelFrame.size.width, oldLabelFrame.size.height);
 	label.frame = newLabelFrame;
 
 	UIButton *button = [UIButton buttonWithType:2]; //UIButtonTypeDetailDisclosure=2
-	button.frame = CGRectMake  ((int)(xStart+0.5) + oldLabelFrame.size.width + 16,0 , button.frame.size.width, button.frame.size.height);
+	button.frame = CGRectMake  ((int)(xStart + oldLabelFrame.size.width + 16),0 , button.frame.size.width, button.frame.size.height);
 
 	[navigationItem.titleView addSubview:label];
 	[navigationItem.titleView addSubview:button];
-
 	button.tag = 22096;
 
 	[button addTarget:self
 	action:@selector(displayPopup:)
-	forControlEvents:UIControlEventTouchDown];
+	forControlEvents:UIControlEventTouchUpInside];
 }
 
 %new

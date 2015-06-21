@@ -172,6 +172,8 @@
 @property (nonatomic,retain,readonly) UINavigationItem * navigationItem;
 - (BOOL)isLoaded;
 - (void)setLoaded:(BOOL)value;
+- (float)titleWidthGap;
+- (void)setTitleWidthGap:(float)value;
 -(UINavigationItem *)navigationItem;
 -(void)viewDidLoad;
 -(void)viewDidAppear:(BOOL)animated;
