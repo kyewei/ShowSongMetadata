@@ -9,48 +9,12 @@
 #import <AVFoundation/AVAssetTrack.h>
 #import <AudioToolbox/AudioToolbox.h>
 
-@protocol MusicTableViewDelegate <UITableViewDelegate>
-@end
+#import <UIKit/UIKit.h>
+#import <substrate.h>
+#import <UIKit/UIViewController.h>
 
 
-@interface MusicTableView : UITableView {
-    NSMutableDictionary *_cellClassDict;
-}
-@property (assign,nonatomic) id/*<MusicTableViewDelegate>*/ delegate;
-@end
-
-@interface UISearchResultsTableView : UITableView
-@property (assign,nonatomic) id/*<MusicSearchTableViewDelegate>*/ delegate;
-@end
-
-@interface MusicSearchTableView : UISearchResultsTableView
-@end
-
-
-
-@interface MPUDataSourceViewController : UIViewController
-@end
-@interface MPUTableViewController : MPUDataSourceViewController
-@end
-@interface MusicTableViewController : MPUTableViewController
-@property (weak) id /*<MusicTableViewControllerDelegate>*/ delegate;
-@property (weak) id /*<MusicTableViewControllerDelegate>*/ dataSource; //I know this exists so...
-@end
-@interface MusicAlbumsDetailViewController : MusicTableViewController <MusicTableViewDelegate>
-@end
-
-@interface MusicSongsViewController : MusicTableViewController <MusicTableViewDelegate>
-@end
-
-@interface UITableViewCellDetailDisclosureView : UIControl {
-    UIButton *_infoButton;
-}
-@property(retain) UIButton *infoButton;
-@end
-
-@interface MusicSearchViewController : UIViewController
-@property (weak) id /*<MusicSearchViewControllerDelegate>*/ delegate;
-@property (weak) id /*<MusicSearchViewControllerDelegate>*/ dataSource; //I know this exists so...
+@protocol MusicEntityValueProviding
 @end
 
 @interface MPMediaQuery : NSObject
@@ -85,7 +49,16 @@
 -(MPMediaQuery *)query;
 @end
 
-@interface MPMediaEntity : NSObject
+@interface MusicMediaQueryDataSource : MPUQueryDataSource
+@end
+
+@interface MusicProfileAlbumsDataSource : MusicMediaQueryDataSource {
+	NSArray *_sectionEntities;
+}
+- (id)sectionEntities;
+@end
+
+@interface MPMediaEntity : NSObject <MusicEntityValueProviding>
 @end
 @interface MPMediaItem : MPMediaEntity
 @property (nonatomic,readonly) NSString * title;
@@ -121,9 +94,90 @@
 - (id)items;
 @end
 
+@interface MPAVItem : NSObject {
+    MPMediaItem* _mediaItem;
+}
+@property (nonatomic,retain,readonly) MPMediaItem * mediaItem;
+- (id) mediaItem;
+@end
+
+@interface MusicCoalescingEntityValueProvider {
+    id *_baseEntityValueProvider;
+}
+//@property (nonatomic, retain) id *baseEntityValueProvider;
+- (id)baseEntityValueProvider;
+@end
+
+@interface MusicMediaEntityProvider {
+	MusicMediaQueryDataSource *_mediaQueryDataSource;
+}
+@property (nonatomic, readonly) MusicMediaQueryDataSource *mediaQueryDataSource;
+- (id)mediaQueryDataSource;
+@end
+
+
+
+@protocol MusicTableViewDelegate <UITableViewDelegate>
+@end
+
+
+@interface MusicTableView : UITableView {
+    NSMutableDictionary *_cellClassDict;
+}
+@property (assign,nonatomic) id/*<MusicTableViewDelegate>*/ delegate;
+@end
+
+@interface UISearchResultsTableView : UITableView
+@property (assign,nonatomic) id/*<MusicSearchTableViewDelegate>*/ delegate;
+@end
+
+@interface MusicSearchTableView : UISearchResultsTableView
+@end
+
+
+@interface MPUDataSourceViewController : UIViewController
+@end
+@interface MPUTableViewController : MPUDataSourceViewController
+@end
+@interface MusicTableViewController : MPUTableViewController
+@property (weak) id /*<MusicTableViewControllerDelegate>*/ delegate;
+@property (weak) id /*<MusicTableViewControllerDelegate>*/ dataSource; //I know this exists so...
+@end
+@interface MusicAlbumsDetailViewController : MusicTableViewController <MusicTableViewDelegate>
+@end
+
+@interface MusicSongsViewController : MusicTableViewController <MusicTableViewDelegate>
+@end
+
+@interface UITableViewCellDetailDisclosureView : UIControl {
+    UIButton *_infoButton;
+}
+@property(retain) UIButton *infoButton;
+@end
+
+@interface MusicSearchViewController : UIViewController
+@property (weak) id /*<MusicSearchViewControllerDelegate>*/ delegate;
+@property (weak) id /*<MusicSearchViewControllerDelegate>*/ dataSource; //I know this exists so...
+@end
+
+
+@interface MusicLibraryBrowseTableViewController: UIViewController
+-(void)addButtonsToTableCells;
+- (MusicTableView *) tableView;
+@end
+@interface MusicProductTracklistTableViewController: MusicLibraryBrowseTableViewController
+
+@end
+@interface MusicProfileAlbumsViewController : MusicProductTracklistTableViewController
+
+@end
+
+
+
+
+
+
 @interface MusicTableViewCell : UITableViewCell
-- (id) getDetailButton:(UITableViewCell*)cell;
-- (id) getTableView:(UITableViewCell*) cell;
 - (void) displayPopup: (UIButton*) sender;
 - (id) getMediaItem:(UITableViewCell*)cell; // To get rid of compiler warnings
 @end
@@ -147,6 +201,19 @@
 - (id) getMediaItem:(UITableViewCell*)cell;
 @end
 
+@interface MusicEntityTracklistItemTableViewCell : UITableViewCell
+//@property (nonatomic, retain) <MusicEntityValueProviding> *entityValueProvider;
+- (id)entityValueProvider;
+- (id) getMediaItem:(UITableViewCell*)cell;
+- (void) displayPopup: (UIButton*) sender;
+@end
+
+@interface MusicEntityHorizontalLockupTableViewCell : UITableViewCell
+- (id)entityValueProvider;
+- (id) getMediaItem:(UITableViewCell*)cell;
+- (void) displayPopup: (UIButton*) sender;
+@end
+
 
 /*@interface MusicActionTableViewCell : MusicTableViewCell
 - (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2;
@@ -158,11 +225,11 @@
 
 
 
-@interface MPAVItem : NSObject {
-    MPMediaItem* _mediaItem;
-}
-@property (nonatomic,retain,readonly) MPMediaItem * mediaItem;
-- (id) mediaItem;
+
+
+@interface MPUTextDrawingView : UIView
+@property (nonatomic, readonly) NSString *text;
+- (NSString *)text;
 @end
 
 @interface MusicNowPlayingViewController : UIViewController {

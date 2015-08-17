@@ -209,11 +209,8 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 }
 %end*/
 
-%hook MusicTableViewCell
-
-%new
-- (id) getDetailButton:(MusicCollectionTrackTableViewCell*)cell {
-	UITableViewCellDetailDisclosureView * disclosureView = MSHookIvar<UITableViewCellDetailDisclosureView*>(self, "_accessoryView");
+UIButton *getDetailButton(UITableViewCell *cell) {
+	UITableViewCellDetailDisclosureView * disclosureView = MSHookIvar<UITableViewCellDetailDisclosureView*>(cell, "_accessoryView");
 	if (!disclosureView) {
 		NSLog(@"Did not get disclosureView.");
 		return nil;
@@ -228,8 +225,7 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 	return infoButton;
 }
 
-%new
-- (id)getTableView:(UITableViewCell*) cell {
+UITableView *getTableView(UITableViewCell *cell) {
 	id view = [cell superview];
 	while (view && [view isKindOfClass:[UITableView class]] == NO) {
 		view = [view superview];
@@ -237,6 +233,8 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 	UITableView *tableView = (UITableView *)view;
 	return tableView;
 }
+
+%hook MusicTableViewCell
 
 %new
 -(void) displayPopup: (UIButton*) sender {
@@ -259,7 +257,7 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 %new
 - (id) getMediaItem:(UITableViewCell*)cell {
 	// Table View
-	MusicTableView *tableView = [self getTableView:self];
+	MusicTableView *tableView = (MusicTableView *)getTableView(self);
 	if (!tableView) {
 		NSLog(@"Did not get tableView:MusicCollectionTrackTableViewCell.");
 		return nil;
@@ -357,7 +355,7 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 	// UITableViewCellAccessoryDetailButton is 4
 
 
-	UIButton * infoButton = [self getDetailButton:self];
+	UIButton * infoButton = getDetailButton(self);
 
 	if (! infoButton) {
 		NSLog(@"MusicCollectionTrackTableViewCell accessory button not made!");
@@ -398,7 +396,7 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 %new
 - (id) getMediaItem:(UITableViewCell*)cell {
 	// Table View
-	MusicTableView *tableView = [self getTableView:self];
+	MusicTableView *tableView = (MusicTableView *)getTableView(self);
 	if (!tableView) {
 		NSLog(@"Did not get tableView:MusicSongListTableViewCell.");
 		return nil;
@@ -469,7 +467,7 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 	// UITableViewCellAccessoryDetailButton is 4
 
 
-	UIButton * infoButton = [self getDetailButton:self];
+	UIButton * infoButton = getDetailButton(self);
 	if (! infoButton) {
 		NSLog(@"MusicSongListTableViewCell accessory button not made!");
 	}
@@ -503,7 +501,7 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 
 	[self setAccessoryType:UITableViewCellAccessoryDetailDisclosureButton];
 
-	UIButton * infoButton = [self getDetailButton:self];
+	UIButton * infoButton = getDetailButton(self);
 	if (! infoButton) {
 		NSLog(@"MusicSearchTableViewCell accessory button not made!");
 	}
@@ -519,7 +517,7 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 %new
 - (id) getMediaItem:(UITableViewCell*)cell {
 	// Table View
-	MusicSearchTableView *tableView = [self getTableView:self];
+	MusicSearchTableView *tableView = (MusicSearchTableView *)getTableView(self);
 	if (!tableView) {
 		NSLog(@"Did not get tableView:MusicSearchTableViewCell.");
 		return nil;
@@ -580,6 +578,124 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 	return songEntity;
 }
 %end
+
+
+
+%hook MusicProfileAlbumsViewController
+
+-(void)viewDidAppear:(BOOL)animated {
+	%orig;
+	if (!(tweakEnabled && songButtonEnabled)) {
+		return;
+	}
+	[self addButtonsToTableCells];
+}
+
+%end
+
+%hook MusicProductTracklistTableViewController
+
+-(void)viewDidAppear:(BOOL)animated {
+	%orig;
+	if (!(tweakEnabled && songButtonEnabled)) {
+		return;
+	}
+	[self addButtonsToTableCells];
+}
+
+%end
+
+%hook MusicLibraryBrowseTableViewController
+
+-(void)viewDidAppear:(BOOL)animated {
+	%orig;
+	if (!(tweakEnabled && songButtonEnabled)) {
+		return;
+	}
+	[self addButtonsToTableCells];
+}
+
+%new
+-(void)addButtonsToTableCells {
+	MusicTableView *tableView = [self tableView];
+	for (MusicEntityTracklistItemTableViewCell *cell in tableView.visibleCells) {
+    	MusicCoalescingEntityValueProvider *cp = [cell entityValueProvider];
+		if ([NSStringFromClass([[cp baseEntityValueProvider] class]) isEqualToString:@"MPConcreteMediaItem"] &&
+			cell.accessoryType !=UITableViewCellAccessoryDetailDisclosureButton) {
+
+			[cell setAccessoryType:UITableViewCellAccessoryDetailDisclosureButton];
+			UIButton * infoButton = getDetailButton(cell);
+			if (!infoButton) {
+				NSLog(@"MusicEntityTracklistItemTableViewCell accessory button not made!");
+			}
+			infoButton.tag = 22096;
+
+			[infoButton addTarget:cell
+			action:@selector(displayPopup:)
+			forControlEvents:UIControlEventTouchDown];
+		}
+    }
+}
+
+%end
+
+
+
+%hook MusicEntityTracklistItemTableViewCell
+%new
+-(void) displayPopup: (UIButton*) sender {
+	if ([[sender class] isSubclassOfClass:[UIButton class]]){
+
+		MPConcreteMediaItem *songEntity = [self getMediaItem:self];
+		if (!songEntity) {
+			NSLog(@"Did not get songEntity.");
+			return;
+		}
+		showPopup(songEntity);
+	} else {
+		NSLog(@"Sender is not a UIButton??");
+	}
+}
+// did not override -initWithStyle, I found a better way by overriding the ViewControllers
+%new
+- (id) getMediaItem:(UITableViewCell*)cell {
+	// New iOS 8.4? SDK content, makes everything easier
+	// Too bad it (probably?) doesn't work on earlier iOS
+
+	MusicCoalescingEntityValueProvider *cp = [self entityValueProvider];
+	if (![NSStringFromClass([[cp baseEntityValueProvider] class]) isEqualToString:@"MPConcreteMediaItem"] ) // make sure not shuffle tableviewcell
+		return nil;
+	MPConcreteMediaItem *songEntity = [cp baseEntityValueProvider];
+	return songEntity;
+}
+%end
+%hook MusicEntityHorizontalLockupTableViewCell
+%new
+-(void) displayPopup: (UIButton*) sender {
+	if ([[sender class] isSubclassOfClass:[UIButton class]]){
+
+		MPConcreteMediaItem *songEntity = [self getMediaItem:self];
+		if (!songEntity) {
+			NSLog(@"Did not get songEntity.");
+			return;
+		}
+		showPopup(songEntity);
+	} else {
+		NSLog(@"Sender is not a UIButton??");
+	}
+}
+%new
+- (id) getMediaItem:(UITableViewCell*)cell {
+	MusicCoalescingEntityValueProvider *cp = [self entityValueProvider];
+	if (![NSStringFromClass([[cp baseEntityValueProvider] class]) isEqualToString:@"MPConcreteMediaItem"] )
+		return nil;
+	MPConcreteMediaItem *songEntity = [cp baseEntityValueProvider];
+	return songEntity;
+}
+%end
+
+
+
 
 %hook MusicNowPlayingViewController
 

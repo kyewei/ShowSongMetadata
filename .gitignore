@@ -1,5 +1,10 @@
 #Theos files
 .theos/*
+obj/*
+_/*
+
+showsongmetadata/.theos/*
+showsongmetadata/obj/*
 
 # OS X temporary files
 .DS_Store
