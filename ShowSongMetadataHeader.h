@@ -100,6 +100,8 @@
 @property (nonatomic,retain,readonly) MPMediaItem * mediaItem;
 - (id) mediaItem;
 @end
+@interface MusicQueryNowPlayingItem : MPAVItem
+@end
 
 @interface MusicCoalescingEntityValueProvider {
     id *_baseEntityValueProvider;
@@ -232,6 +234,19 @@
 - (NSString *)text;
 @end
 
+@interface MusicNowPlayingFloatingButton: UIButton {
+    UIImageView *_glyphImageView;
+}
+//@property (nonatomic, retain) UIImage *glyphImage;
+- (id)glyphImage;
+- (int)effect;
+- (void)setEffect:(int)arg1;
+- (void)setGlyphImage:(id)arg1;
+- (void)setGlyphImageOffset:(struct UIOffset)arg1;
+- (id)initWithFrame:(CGRect)arg1;
+@end
+
+
 @interface MusicNowPlayingViewController : UIViewController {
     MPAVItem* _item;
     //UINavigationItem* _navigationItem;
@@ -250,7 +265,11 @@
 - (id) getMediaItem:(UIViewController*)view;
 -(void) displayPopup: (UIButton*) sender;
 
+- (MusicNowPlayingFloatingButton *)metadataButton;
+- (void)setMetadataButton:(UIButton *)button;
 @end
+
+
 
 
 @interface MPUNowPlayingTitlesView : UIView

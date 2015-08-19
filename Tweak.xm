@@ -8,6 +8,11 @@
 #import "ShowSongMetadataHeader.h"
 #define settingsPath @"/User/Library/Preferences/com.kyewei.showsongmetadata.plist"
 
+#ifndef kCFCoreFoundationVersionNumber_iOS_8_4
+#define kCFCoreFoundationVersionNumber_iOS_8_4 1145.15
+#endif
+
+
 static BOOL tweakEnabled = YES;
 static BOOL songButtonEnabled = YES;
 static BOOL nowPlayingEnabled = YES;
@@ -88,16 +93,6 @@ static void updatePrefs() {
 	showSampleRate = showSampleRateNum ? [showSampleRateNum boolValue] : 1;
 }
 
-%ctor {
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
-									NULL,
-									(CFNotificationCallback)updatePrefs,
-									CFSTR("com.kyewei.showsongmetadata/settingschanged"),
-									NULL, CFNotificationSuspensionBehaviorCoalesce);
-	updatePrefs();
-}
-
-
 static AudioFileID getAudioFileID(ExtAudioFileRef fileRef) {
 	OSStatus status;
 	AudioFileID result = NULL;
@@ -161,13 +156,13 @@ void showPopup (MPConcreteMediaItem *songEntity) {
 	showAlbumArtist && (!hideNull || [songEntity albumArtist]) ? [NSString stringWithFormat:@"Album Artist: %@\n", [songEntity albumArtist]] : @"",
 	showComposer && (!hideNull || [songEntity composer]) ? [NSString stringWithFormat:@"Composer: %@\n", [songEntity composer]] : @"",
 	showGenre && (!hideNull || [songEntity genre]) ? [NSString stringWithFormat:@"Genre: %@\n", [songEntity genre]] : @"",
-	showYear && (!hideNull || [songEntity year]) ? [NSString stringWithFormat:@"Year: %llu\n", [songEntity year]] : @"",
+	showYear && (1 || [songEntity year]) ? [NSString stringWithFormat:@"Year: %llu\n", [songEntity year]] : @"",
 	showReleaseDate && (!hideNull || [songEntity releaseDate]) ? [NSString stringWithFormat:@"Release Date: %@\n", [[songEntity releaseDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil]] : @"",
 	showComments && (!hideNull || [songEntity comments]) ? [NSString stringWithFormat:@"Comments: %@\n", [songEntity comments]] : @"",
-	showPlayCount && (!hideNull || [songEntity playCount]) ? [NSString stringWithFormat:@"Play Count: %llu\n", [songEntity playCount]] : @"",
-	showSkipCount && (!hideNull || [songEntity skipCount]) ? [NSString stringWithFormat:@"Skip Count: %llu\n", [songEntity skipCount]] : @"",
-	showPlaysSinceSync && (!hideNull || [songEntity playCountSinceSync]) ? [NSString stringWithFormat:@"Plays Since Sync: %llu\n", [songEntity playCountSinceSync]] : @"",
-	showSkipsSinceSync && (!hideNull || [songEntity skipCountSinceSync]) ? [NSString stringWithFormat:@"Skips Since Sync: %llu\n", [songEntity skipCountSinceSync]] : @"",
+	showPlayCount && (1 || [songEntity playCount]) ? [NSString stringWithFormat:@"Play Count: %llu\n", [songEntity playCount]] : @"",
+	showSkipCount && (1 || [songEntity skipCount]) ? [NSString stringWithFormat:@"Skip Count: %llu\n", [songEntity skipCount]] : @"",
+	showPlaysSinceSync && (1 || [songEntity playCountSinceSync]) ? [NSString stringWithFormat:@"Plays Since Sync: %llu\n", [songEntity playCountSinceSync]] : @"",
+	showSkipsSinceSync && (1 || [songEntity skipCountSinceSync]) ? [NSString stringWithFormat:@"Skips Since Sync: %llu\n", [songEntity skipCountSinceSync]] : @"",
 	showLastPlayed && (!hideNull || [songEntity lastPlayedDate]) ? [NSString stringWithFormat:@"Last Played: %@\n", [[songEntity lastPlayedDate] dateWithCalendarFormat:@"%Y-%m-%d" timeZone:nil]] : @"",
 	//(int)[audioTrack estimatedDataRate]/1000 ,// bitrate, but only works for AAC files (i.e. .m4a extension)
 	showBitrate ? [NSString stringWithFormat:@"Bitrate: %dkbps\n", (int)bitRate/1000] : @"",
@@ -233,6 +228,10 @@ UITableView *getTableView(UITableViewCell *cell) {
 	UITableView *tableView = (UITableView *)view;
 	return tableView;
 }
+
+
+
+%group iOS8_0
 
 %hook MusicTableViewCell
 
@@ -579,124 +578,6 @@ UITableView *getTableView(UITableViewCell *cell) {
 }
 %end
 
-
-
-%hook MusicProfileAlbumsViewController
-
--(void)viewDidAppear:(BOOL)animated {
-	%orig;
-	if (!(tweakEnabled && songButtonEnabled)) {
-		return;
-	}
-	[self addButtonsToTableCells];
-}
-
-%end
-
-%hook MusicProductTracklistTableViewController
-
--(void)viewDidAppear:(BOOL)animated {
-	%orig;
-	if (!(tweakEnabled && songButtonEnabled)) {
-		return;
-	}
-	[self addButtonsToTableCells];
-}
-
-%end
-
-%hook MusicLibraryBrowseTableViewController
-
--(void)viewDidAppear:(BOOL)animated {
-	%orig;
-	if (!(tweakEnabled && songButtonEnabled)) {
-		return;
-	}
-	[self addButtonsToTableCells];
-}
-
-%new
--(void)addButtonsToTableCells {
-	MusicTableView *tableView = [self tableView];
-	for (MusicEntityTracklistItemTableViewCell *cell in tableView.visibleCells) {
-    	MusicCoalescingEntityValueProvider *cp = [cell entityValueProvider];
-		if ([NSStringFromClass([[cp baseEntityValueProvider] class]) isEqualToString:@"MPConcreteMediaItem"] &&
-			cell.accessoryType !=UITableViewCellAccessoryDetailDisclosureButton) {
-
-			[cell setAccessoryType:UITableViewCellAccessoryDetailDisclosureButton];
-			UIButton * infoButton = getDetailButton(cell);
-			if (!infoButton) {
-				NSLog(@"MusicEntityTracklistItemTableViewCell accessory button not made!");
-			}
-			infoButton.tag = 22096;
-
-			[infoButton addTarget:cell
-			action:@selector(displayPopup:)
-			forControlEvents:UIControlEventTouchDown];
-		}
-    }
-}
-
-%end
-
-
-
-%hook MusicEntityTracklistItemTableViewCell
-%new
--(void) displayPopup: (UIButton*) sender {
-	if ([[sender class] isSubclassOfClass:[UIButton class]]){
-
-		MPConcreteMediaItem *songEntity = [self getMediaItem:self];
-		if (!songEntity) {
-			NSLog(@"Did not get songEntity.");
-			return;
-		}
-		showPopup(songEntity);
-	} else {
-		NSLog(@"Sender is not a UIButton??");
-	}
-}
-// did not override -initWithStyle, I found a better way by overriding the ViewControllers
-%new
-- (id) getMediaItem:(UITableViewCell*)cell {
-	// New iOS 8.4? SDK content, makes everything easier
-	// Too bad it (probably?) doesn't work on earlier iOS
-
-	MusicCoalescingEntityValueProvider *cp = [self entityValueProvider];
-	if (![NSStringFromClass([[cp baseEntityValueProvider] class]) isEqualToString:@"MPConcreteMediaItem"] ) // make sure not shuffle tableviewcell
-		return nil;
-	MPConcreteMediaItem *songEntity = [cp baseEntityValueProvider];
-	return songEntity;
-}
-%end
-%hook MusicEntityHorizontalLockupTableViewCell
-%new
--(void) displayPopup: (UIButton*) sender {
-	if ([[sender class] isSubclassOfClass:[UIButton class]]){
-
-		MPConcreteMediaItem *songEntity = [self getMediaItem:self];
-		if (!songEntity) {
-			NSLog(@"Did not get songEntity.");
-			return;
-		}
-		showPopup(songEntity);
-	} else {
-		NSLog(@"Sender is not a UIButton??");
-	}
-}
-%new
-- (id) getMediaItem:(UITableViewCell*)cell {
-	MusicCoalescingEntityValueProvider *cp = [self entityValueProvider];
-	if (![NSStringFromClass([[cp baseEntityValueProvider] class]) isEqualToString:@"MPConcreteMediaItem"] )
-		return nil;
-	MPConcreteMediaItem *songEntity = [cp baseEntityValueProvider];
-	return songEntity;
-}
-%end
-
-
-
-
 %hook MusicNowPlayingViewController
 
 %new
@@ -824,3 +705,238 @@ UITableView *getTableView(UITableViewCell *cell) {
 	[self.delegate addButtonToView];
 }
 %end
+
+%end //iOS8.0 to <8.4
+
+
+%group iOS8_4
+
+void addButtonToCell(id cell) {
+	MusicEntityTracklistItemTableViewCell *c = cell;
+
+	MusicCoalescingEntityValueProvider *cp = [c entityValueProvider];
+	if ([NSStringFromClass([[cp baseEntityValueProvider] class]) isEqualToString:@"MPConcreteMediaItem"] &&
+		c.accessoryType !=UITableViewCellAccessoryDetailDisclosureButton) {
+
+		[c setAccessoryType:UITableViewCellAccessoryDetailDisclosureButton];
+		UIButton * infoButton = getDetailButton(c);
+		if (!infoButton) {
+			NSLog(@"MusicEntityTracklistItemTableViewCell accessory button not made!");
+		}
+		infoButton.tag = 22096;
+
+		[infoButton addTarget:c
+		action:@selector(displayPopup:)
+		forControlEvents:UIControlEventTouchUpInside];
+	}
+}
+%hook MusicProfileAlbumsViewController
+- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
+	%orig;
+	if (!(tweakEnabled && songButtonEnabled))
+ 		return;
+	addButtonToCell(cell);
+}
+%end
+%hook MusicProductTracklistTableViewController
+- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
+	%orig;
+	if (!(tweakEnabled && songButtonEnabled))
+ 		return;
+	addButtonToCell(cell);
+}
+%end
+%hook MusicLibraryBrowseTableViewController
+- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
+	%orig;
+	if (!(tweakEnabled && songButtonEnabled))
+ 		return;
+	addButtonToCell(cell);
+}
+%end
+
+
+%hook MusicEntityTracklistItemTableViewCell
+%new
+-(void) displayPopup: (UIButton*) sender {
+	if ([[sender class] isSubclassOfClass:[UIButton class]]){
+
+		MPConcreteMediaItem *songEntity = [self getMediaItem:self];
+		if (!songEntity) {
+			NSLog(@"Did not get songEntity.");
+			return;
+		}
+		showPopup(songEntity);
+	} else {
+		NSLog(@"Sender is not a UIButton??");
+	}
+}
+// did not override -initWithStyle, I found a better way by overriding the ViewControllers
+%new
+- (id) getMediaItem:(UITableViewCell*)cell {
+	// New iOS 8.4? SDK content, makes everything easier
+	// Too bad it (probably?) doesn't work on earlier iOS
+
+	MusicCoalescingEntityValueProvider *cp = [self entityValueProvider];
+	if (![NSStringFromClass([[cp baseEntityValueProvider] class]) isEqualToString:@"MPConcreteMediaItem"] ) // make sure not shuffle tableviewcell
+		return nil;
+	MPConcreteMediaItem *songEntity = [cp baseEntityValueProvider];
+	return songEntity;
+}
+%end
+%hook MusicEntityHorizontalLockupTableViewCell
+%new
+-(void) displayPopup: (UIButton*) sender {
+	if ([[sender class] isSubclassOfClass:[UIButton class]]){
+
+		MPConcreteMediaItem *songEntity = [self getMediaItem:self];
+		if (!songEntity) {
+			NSLog(@"Did not get songEntity.");
+			return;
+		}
+		showPopup(songEntity);
+	} else {
+		NSLog(@"Sender is not a UIButton??");
+	}
+}
+%new
+- (id) getMediaItem:(UITableViewCell*)cell {
+	MusicCoalescingEntityValueProvider *cp = [self entityValueProvider];
+	if (![NSStringFromClass([[cp baseEntityValueProvider] class]) isEqualToString:@"MPConcreteMediaItem"] )
+		return nil;
+	MPConcreteMediaItem *songEntity = [cp baseEntityValueProvider];
+	return songEntity;
+}
+%end
+
+
+%hook MusicNowPlayingViewController
+
+%new
+- (MusicNowPlayingFloatingButton *)metadataButton {
+	MusicNowPlayingFloatingButton * _metadataButton = objc_getAssociatedObject(self, @selector(metadataButton));
+	return _metadataButton;
+}
+
+%new
+- (void)setMetadataButton:(MusicNowPlayingFloatingButton *)button {
+	objc_setAssociatedObject(self, @selector(metadataButton), button, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+%new
+- (id) getMediaItem:(UIViewController*)view {
+	MusicQueryNowPlayingItem *item = MSHookIvar<MusicQueryNowPlayingItem*>(self, "_currentItem");
+	MPConcreteMediaItem *mediaItem = [item mediaItem];
+	return mediaItem;
+}
+
+%new
+-(void) displayPopup: (UIButton*) sender {
+	if ([[sender class] isSubclassOfClass:[UIButton class]]){
+
+		MPConcreteMediaItem *songEntity = [self getMediaItem:self];
+		if (!songEntity) {
+			NSLog(@"Did not get songEntity.");
+			return;
+		}
+		showPopup(songEntity);
+	} else {
+		NSLog(@"Sender is not a UIButton??");
+	}
+}
+
+- (void)viewDidLayoutSubviews {
+	%orig;
+
+	if (!(tweakEnabled && nowPlayingEnabled)) {
+		if ([self metadataButton])
+			[[self metadataButton] removeFromSuperview];
+		return;
+	}
+
+	MusicNowPlayingFloatingButton *dismiss = MSHookIvar<MusicNowPlayingFloatingButton*>(self, "_dismissButton");
+	if (dismiss) {
+		MusicNowPlayingFloatingButton *button;
+
+		if (![self metadataButton]) {
+
+			button = [[dismiss.class alloc] initWithFrame:
+				CGRectMake(dismiss.superview.frame.size.width - dismiss.frame.origin.x - dismiss.frame.size.width,
+					dismiss.frame.origin.y,
+					dismiss.frame.size.width,
+					dismiss.frame.size.height)];
+
+
+			UIButton *regular = [UIButton buttonWithType:2];
+			[regular setTintColor:[UIColor blackColor]];
+
+			CGFloat bt = regular.frame.size.width;
+			CGFloat size = dismiss.frame.size.width;
+			CGFloat offset = size-bt;
+
+			//8-16 x
+			//4-20 y
+			//24
+
+			// crop i
+			UIGraphicsBeginImageContextWithOptions(CGSizeMake(size/3, size*2/3), NO, 0.0);
+    		[regular.currentImage drawAtPoint:CGPointMake(-size/3 + offset/2, -size/8)];
+    		UIImage *crop = UIGraphicsGetImageFromCurrentImageContext();
+    		UIGraphicsEndImageContext();
+
+			[button setGlyphImage:crop];
+			[button setEffect:dismiss.effect];
+
+			[self setMetadataButton:button];
+
+			button.tag = 22096;
+
+			[button addTarget:self
+			action:@selector(displayPopup:)
+			forControlEvents:UIControlEventTouchUpInside];
+		} else {
+			button = [self metadataButton];
+		}
+
+		[button removeFromSuperview];
+
+		if ([self getMediaItem:self]) { // only display if used with local or streamed files, not radio
+			UIView *parent = dismiss.superview;
+
+			// adjust position so its mirroring other button
+			button.frame = CGRectMake(dismiss.superview.frame.size.width - dismiss.frame.origin.x - dismiss.frame.size.width,
+						dismiss.frame.origin.y,
+						dismiss.frame.size.width,
+						dismiss.frame.size.height);
+
+			[parent addSubview:button];
+		}
+	}
+}
+
+%end
+
+%end
+
+
+
+%ctor {
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+									NULL,
+									(CFNotificationCallback)updatePrefs,
+									CFSTR("com.kyewei.showsongmetadata/settingschanged"),
+									NULL, CFNotificationSuspensionBehaviorCoalesce);
+	updatePrefs();
+
+	if (kCFCoreFoundationVersionNumber >=kCFCoreFoundationVersionNumber_iOS_8_4) {
+		%init(iOS8_4);
+	} else {
+		%init(iOS8_0);
+	}
+}
+
+
+
+// #include "Everything.xm"
+
+
