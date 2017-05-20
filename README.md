@@ -10,7 +10,7 @@ You can find the current version ```1.1.2-1``` hosted on the
 
 It is built and tested with an iPod Touch on iOS 8.1.2 and should work with iPhones as well on iOS 8. This tweak may or may not work iOS 7, since I don't own such a device and cannot inspect the Music app.
 
-###Screenshots
+### Screenshots
 ![Screenshot1](Assets/ArtistView1.PNG?raw=true)
 ![Screenshot2](Assets/ArtistView2.PNG?raw=true)
 
@@ -19,7 +19,7 @@ It is built and tested with an iPod Touch on iOS 8.1.2 and should work with iPho
 ![Screenshot4](Assets/NowPlaying2.PNG?raw=true)
 
 
-###Implementation
+### Implementation
 
 (Why? Documentation is nice.)
 
@@ -31,6 +31,6 @@ A button is also added in the Now Playing view. A ```MusicNowPlayingViewControll
 
 TL;DR, looking through private Apple things at runtime is cool. Locating what you want to find, though, is very time-consuming.
 
-###Todo
+### Todo
 * Settings preference pane
 * (Maybe? if possible...) modifying metadata/MP3 tags on device.
